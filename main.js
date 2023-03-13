@@ -54,14 +54,14 @@ m0.compose(t0, q0, scale1);
 
 const t1l = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
 const q1 = new THREE.Quaternion();
-// q1.setFromAxisAngle(worldUp, Math.PI / 3);
+// q1.setFromAxisAngle(worldUp, Math.PI / 12);
 const q1l = new THREE.Matrix4().makeRotationFromQuaternion(q1);
 m1.multiplyMatrices(q1l, t1l)
 
 const t2 = new THREE.Vector3(0, 0.1, 0);
 const t2l = new THREE.Matrix4().makeTranslation(t2.x, t2.y, t2.z);
 const q2 = new THREE.Quaternion();
-// q2.setFromAxisAngle(worldUp, -Math.PI / 3);
+// q2.setFromAxisAngle(worldUp, -Math.PI / 4);
 const q2l = new THREE.Matrix4().makeRotationFromQuaternion(q2);
 m2.multiplyMatrices(q2l, t2l)
 
@@ -75,7 +75,7 @@ m3.multiplyMatrices(q3l, t3l)
 const t4 = new THREE.Vector3(0, 0.1, 0);
 const t4l = new THREE.Matrix4().makeTranslation(t4.x, t4.y, t4.z);
 const q4 = new THREE.Quaternion();
-// q4.setFromAxisAngle(worldUp, Math.PI / 3);
+// q4.setFromAxisAngle(worldUp, -Math.PI / 3);
 const q4l = new THREE.Matrix4().makeRotationFromQuaternion(q4);
 m4.multiplyMatrices(q4l, t4l)
 
@@ -89,6 +89,26 @@ const boneWorld = [m0.clone(), m1.clone(), m2.clone(), m3.clone(), m4.clone()];
 const bonesBind = [m0.clone(), m1.clone(), m2.clone(), m3.clone(), m4.clone()];
 const bonesOffset = [m0.clone(), m1.clone(), m2.clone(), m3.clone(), m4.clone()];
 const bonesTarget = [m0.clone(), m1.clone(), m2.clone(), m3.clone(), m4.clone()];
+
+console.log(boneLocal, bonesTarget)
+
+const qT = new THREE.Quaternion();
+qT.setFromAxisAngle(worldUp, Math.PI / 6);
+const qTm = new THREE.Matrix4().makeRotationFromQuaternion(qT);
+bonesTarget[1].multiplyMatrices(qTm, t1l);
+qT.setFromAxisAngle(worldUp, Math.PI / 3);
+qTm.makeRotationFromQuaternion(qT);
+bonesTarget[2].multiplyMatrices(qTm, t2l);
+qT.setFromAxisAngle(worldUp, Math.PI / 3);
+qTm.makeRotationFromQuaternion(qT);
+bonesTarget[3].multiplyMatrices(qTm, t3l);
+qT.setFromAxisAngle(worldUp, Math.PI / 3);
+qTm.makeRotationFromQuaternion(qT);
+bonesTarget[4].multiplyMatrices(qTm, t4l);
+
+// qT.setFromAxisAngle(worldUp, -Math.PI / 3);
+// qTm.makeRotationFromQuaternion(qT);
+// console.log(qTm, q1l)
 
 const skeletonGraph = new Graph;
 skeletonGraph.createEmbedding(skeletonGraph.vertex);
@@ -154,6 +174,15 @@ ppos[points.newCell(points.vertex)] = new THREE.Vector3(0.05, 0.25, 0);
 ppos[points.newCell(points.vertex)] = new THREE.Vector3(0.05, 0.3, 0);
 ppos[points.newCell(points.vertex)] = new THREE.Vector3(0.05, 0.35, 0);
 ppos[points.newCell(points.vertex)] = new THREE.Vector3(0.05, 0.4, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.05, 0);
+ppos[points.newCell(points.vertex)] =  new THREE.Vector3(-0.05, 0.1, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.15, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.2, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.25, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.3, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.35, 0);
+ppos[points.newCell(points.vertex)] = new THREE.Vector3(-0.05, 0.4, 0);
 points.setEmbedding(points.vertex, points.newDart(), 0)
 points.setEmbedding(points.vertex, points.newDart(), 1)
 points.setEmbedding(points.vertex, points.newDart(), 2)
@@ -163,7 +192,15 @@ points.setEmbedding(points.vertex, points.newDart(), 5)
 points.setEmbedding(points.vertex, points.newDart(), 6)
 points.setEmbedding(points.vertex, points.newDart(), 7)
 points.setEmbedding(points.vertex, points.newDart(), 8)
-
+points.setEmbedding(points.vertex, points.newDart(), 9)
+points.setEmbedding(points.vertex, points.newDart(), 10)
+points.setEmbedding(points.vertex, points.newDart(), 11)
+points.setEmbedding(points.vertex, points.newDart(), 12)
+points.setEmbedding(points.vertex, points.newDart(), 13)
+points.setEmbedding(points.vertex, points.newDart(), 14)
+points.setEmbedding(points.vertex, points.newDart(), 15)
+points.setEmbedding(points.vertex, points.newDart(), 16)
+points.setEmbedding(points.vertex, points.newDart(), 17)
 pbind[0] = ppos[0].clone();
 pbind[1] = ppos[1].clone();
 pbind[2] = ppos[2].clone();
@@ -173,19 +210,38 @@ pbind[5] = ppos[5].clone();
 pbind[6] = ppos[6].clone();
 pbind[7] = ppos[7].clone();
 pbind[8] = ppos[8].clone();
+pbind[9] = ppos[9].clone();
+pbind[10] = ppos[10].clone();
+pbind[11] = ppos[11].clone();
+pbind[12] = ppos[12].clone();
+pbind[13] = ppos[13].clone();
+pbind[14] = ppos[14].clone();
+pbind[15] = ppos[15].clone();
+pbind[16] = ppos[16].clone();
+pbind[17] = ppos[17].clone();
 
 // pweights[0] = [{b: 0, w: 1}]
-pweights[0] = [{b: 0, w: 0.75}, {b: 1, w: 0.25}]
-pweights[1] = [{b: 0, w: 0.75}, {b: 1, w: 0.25}]
-pweights[2] = [{b: 0, w: 0.5}, {b: 1, w: 0.5}]
-pweights[3] = [{b: 0, w: 0.25}, {b: 1, w: 0.5}, {b: 1, w: 0.25}]
-pweights[4] = [{b: 1, w: 0.5}, {b: 2, w: 0.5}]
-pweights[5] = [{b: 1, w: 0.25}, {b: 2, w: 0.5}, {b: 3, w: 0.25}]
-pweights[6] = [{b: 2, w: 0.5}, {b: 3, w: 0.5}]
-pweights[7] = [{b: 2, w: 0.25}, {b: 3, w: 0.5}, {b: 4, w: 0.25}]
-pweights[8] = [{b: 3, w: 0.25}, {b: 4, w: 0.75}]
+pweights[0] = [{b: 0, w: 0.5}, {b: 1, w: 0.5}]
+pweights[1] = [{b: 0, w: 0.25}, {b: 1, w: 0.5}, {b: 2, w: 0.25}]
+pweights[2] = [{b: 1, w: 0.5}, {b: 2, w: 0.5}]
+pweights[3] = [{b: 1, w: 0.25}, {b: 2, w: 0.5}, {b: 3, w: 0.25}]
+pweights[4] = [{b: 2, w: 0.5}, {b: 3, w: 0.5}]
+pweights[5] = [{b: 2, w: 0.25}, {b: 3, w: 0.5}, {b: 4, w: 0.25}]
+pweights[6] = [{b: 3, w: 0.5}, {b: 4, w: 0.5}]
+pweights[7] = [{b: 3, w: 0.25}, {b: 4, w: 0.75}]
+pweights[8] = [{b: 3, w: 0.0}, {b: 4, w: 1}]
 
-for(let i = 0; i < 9; ++i){
+pweights[9] = pweights[0];
+pweights[10] = pweights[1];
+pweights[11] = pweights[2];
+pweights[12] = pweights[3];
+pweights[13] = pweights[4];
+pweights[14] = pweights[5];
+pweights[15] = pweights[6];
+pweights[16] = pweights[7];
+pweights[17] = pweights[8];
+
+for(let i = 0; i < 18; ++i){
 	let p0 = new THREE.Vector3();
 	let pb = pbind[i].clone();
 	console.log(i, pweights[i])
@@ -218,24 +274,44 @@ console.log(skeletonGraph.nbCells(skeletonGraph.edge))
 
 function update (t)
 {
+	// console.log(bonesTarget)
 	let s = t/1000;
 	// console.log(s)
+	// console.log()
 	for(let i = 0; i < bones.length; ++i) {
-		const p = boneParent[i];
 		const q = new THREE.Quaternion();
-		q.setFromAxisAngle(worldUp, Math.sin(s / 10));
+		const q0 = new THREE.Quaternion();
+		const q1 = new THREE.Quaternion();
+		// q.setFromAxisAngle(worldUp, Math.sin(s / 10));
+		const initRotation = new THREE.Matrix4();
+		initRotation.extractRotation(boneLocal[i]);
+		q0.setFromRotationMatrix(initRotation);
+		const targetRotation = new THREE.Matrix4();
+		targetRotation.extractRotation(bonesTarget[i]);
+		// q.slerpQuaternions(initRotation, targetRotation, 0.5)
+		q1.setFromRotationMatrix(targetRotation);
+		q.copy(q0).slerp(q1, Math.sin(s/2)*0.5+0.5);
+		// const qm = new THREE.Matrix4();
 		const qm = new THREE.Matrix4().makeRotationFromQuaternion(q);
+		// const sm = new THREE.Matrix4().makeScale(1 + Math.sin(s / 10), 1, 1);
+
+		// console.log(i, q, q0, q1)
+		// console.log(initRotation, targetRotation)
+
+
+		const p = boneParent[i];
 		if(p != null) {
 			const mb = boneLocal[i].clone();
 			const mp = boneWorld[p].clone();
 	
-			mb.multiply(qm);
-			mp.multiply(mb);
+			qm.multiply(mb);
+			mp.multiply(qm);
 			boneWorld[i].copy(mp);
+			// console.log(i, boneWorld[i])
 		}
 		else{
 			const mb = boneLocal[i].clone();
-			mb.multiply(qm);
+			qm.multiply(mb);
 			boneWorld[i].copy(mb);
 		}
 	}
@@ -243,11 +319,12 @@ function update (t)
 	for(let i = 0; i < bones.length; ++i) {
 		let vb = boneVert[i];
 		position[skeletonGraph.cell(skeletonGraph.vertex, vb)] = new THREE.Vector3().applyMatrix4(boneWorld[i]);
+		// console.log(position[skeletonGraph.cell(skeletonGraph.vertex, vb)])
 	}
 	skeletonRenderer.vertices.update()
 	skeletonRenderer.edges.update()
 
-	for(let i = 0; i < 9; ++i){
+	for(let i = 0; i < 18; ++i){
 		let p0 = new THREE.Vector3();
 		let pb = pbind[i].clone();
 		for(let j = 0; j < pweights[i].length; ++j){
