@@ -3,7 +3,7 @@ import Graph from './CMapJS/CMap/Graph.js';
 import Renderer from './CMapJS/Rendering/Renderer.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
 import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
-
+import Skeleton from './Skeleton.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -31,9 +31,8 @@ window.addEventListener('resize', function() {
 });
 
 
-// class Skeleton {
 
-// }
+
 
 // let skel = new Skeleton()
 
@@ -109,6 +108,10 @@ bonesTarget[4].multiplyMatrices(qTm, t4l);
 // qT.setFromAxisAngle(worldUp, -Math.PI / 3);
 // qTm.makeRotationFromQuaternion(qT);
 // console.log(qTm, q1l)
+
+window.testFunc = function(test = new THREE.Matrix4) {
+	console.log(test)
+}
 
 const skeletonGraph = new Graph;
 skeletonGraph.createEmbedding(skeletonGraph.vertex);
@@ -271,6 +274,18 @@ skeletonRenderer.edges.addTo(scene);
 console.log(skeletonGraph.nbCells(skeletonGraph.vertex))
 console.log(skeletonGraph.nbCells(skeletonGraph.edge))
 
+
+const skeleton = new Skeleton;
+console.log(skeleton);
+const root = skeleton.newBone("root");
+const bone0 = skeleton.newBone();
+skeleton.setParent(bone0, root);
+const bone1 = skeleton.newBone();
+skeleton.setParent(bone1, bone0);
+const bone2 = skeleton.newBone();
+skeleton.setParent(bone2, bone1);
+const bone3 = skeleton.newBone();
+skeleton.setParent(bone3, bone2);
 
 function update (t)
 {
