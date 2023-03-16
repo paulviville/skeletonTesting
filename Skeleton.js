@@ -3,6 +3,11 @@ import { Matrix4 } from './CMapJS/Libs/three.module.js';
 
 const root = null;
 
+function KeyFrame (t, mat) {
+	this.t = t;
+	this.mat = mat;
+}
+
 export default function Skeleton () {
 	const attributes = new AttributesContainer;
 
