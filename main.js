@@ -3,7 +3,7 @@ import Graph from './CMapJS/CMap/Graph.js';
 import Renderer from './CMapJS/Rendering/Renderer.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
 import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
-import Skeleton from './Skeleton.js';
+import Skeleton, { SkeletonGraph, SkeletonRenderer } from './Skeleton.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -274,19 +274,38 @@ skeletonRenderer.edges.addTo(scene);
 console.log(skeletonGraph.nbCells(skeletonGraph.vertex))
 console.log(skeletonGraph.nbCells(skeletonGraph.edge))
 
+const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
+// const rotation = new THREE.Quaternion();
+// q1.setFromAxisAngle(worldUp, Math.PI / 12);
+const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion());
+const transform = new THREE.Matrix4().multiplyMatrices(rotation, translation)
 
 const skeleton = new Skeleton;
 console.log(skeleton);
 const root = skeleton.newBone("root");
 const bone0 = skeleton.newBone();
 skeleton.setParent(bone0, root);
+skeleton.setLocalTransform(bone0, transform);
 const bone1 = skeleton.newBone();
 skeleton.setParent(bone1, bone0);
+skeleton.setLocalTransform(bone1, transform);
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
+skeleton.setLocalTransform(bone2, transform);
 const bone3 = skeleton.newBone();
 skeleton.setParent(bone3, bone2);
+skeleton.setLocalTransform(bone3, transform);
 
+const sGraph = SkeletonGraph(skeleton);
+// const renderer2 = new Renderer(sGraph);
+// renderer2.vertices.create();
+// renderer2.vertices.addTo(scene);
+// renderer2.edges.create();
+// renderer2.edges.addTo(scene);
+
+const sRenderer = new SkeletonRenderer(skeleton);
+sRenderer.createVertices();
+scene.add(sRenderer.vertices)
 function update (t)
 {
 	// console.log(bonesTarget)
