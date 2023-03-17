@@ -3,7 +3,7 @@ import Graph from './CMapJS/CMap/Graph.js';
 import Renderer from './CMapJS/Rendering/Renderer.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
 import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
-import Skeleton, { SkeletonGraph, SkeletonRenderer } from './Skeleton.js';
+import Skeleton, {Key, SkeletonGraph, SkeletonRenderer } from './Skeleton.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -277,8 +277,14 @@ console.log(skeletonGraph.nbCells(skeletonGraph.edge))
 const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
 // const rotation = new THREE.Quaternion();
 // q1.setFromAxisAngle(worldUp, Math.PI / 12);
-const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion());
+const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 12));
 const transform = new THREE.Matrix4().multiplyMatrices(rotation, translation)
+const key0 = new Key(0, transform);
+
+const rotation1 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 12));
+const transform1 = new THREE.Matrix4().multiplyMatrices(rotation1, translation)
+const key1 = new Key(100, transform1);
+// const key2 = new Key(50, transform1);
 
 const skeleton = new Skeleton;
 console.log(skeleton);
@@ -286,14 +292,22 @@ const root = skeleton.newBone("root");
 const bone0 = skeleton.newBone();
 skeleton.setParent(bone0, root);
 skeleton.setLocalTransform(bone0, transform);
+skeleton.addKey(bone0, key0);
+skeleton.addKey(bone0, key1);
 const bone1 = skeleton.newBone();
 skeleton.setParent(bone1, bone0);
+skeleton.addKey(bone1, key0);
+skeleton.addKey(bone1, key1);
 skeleton.setLocalTransform(bone1, transform);
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
+skeleton.addKey(bone2, key0);
+skeleton.addKey(bone2, key1);
 skeleton.setLocalTransform(bone2, transform);
 const bone3 = skeleton.newBone();
 skeleton.setParent(bone3, bone2);
+skeleton.addKey(bone3, key0);
+skeleton.addKey(bone3, key1);
 skeleton.setLocalTransform(bone3, transform);
 
 const sGraph = SkeletonGraph(skeleton);
@@ -305,7 +319,14 @@ const sGraph = SkeletonGraph(skeleton);
 
 const sRenderer = new SkeletonRenderer(skeleton);
 sRenderer.createVertices();
+sRenderer.createEdges();
 scene.add(sRenderer.vertices)
+scene.add(sRenderer.edges)
+
+const geometry = new THREE.ConeGeometry(0.05, 0.255, 5, 1);
+const material = new THREE.MeshLambertMaterial();
+const mesh = new THREE.Mesh(geometry, material)
+// scene.add(mesh)
 function update (t)
 {
 	// console.log(bonesTarget)

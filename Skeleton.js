@@ -5,9 +5,46 @@ import * as THREE from './CMapJS/Libs/three.module.js';
 
 const root = null;
 
-function KeyFrame (t, mat) {
+export function Key (t, mat) {
 	this.t = t;
 	this.mat = mat;
+}
+
+function Animation () {
+	this.keys = [];
+
+	this.addKey = function (key) {
+		this.keys.push(key);
+
+		this.keys.sort((key0, key1) => {
+			if(key0.t < key1.t)
+				return -1;
+			else 
+				return 1;
+		});
+
+		console.log(this.keys)
+	}
+
+	this.transformAt = function (t) {
+		const transform = new Matrix4;
+		if(this.keys.length == 0)
+			return transform;
+			
+		console.log(this.keys.length)
+		if(t < this.keys[this.keys.length - 1].t) /// invert < -> >=
+			transform.copy(this.keys[this.keys.length - 1].mat);
+		else {
+			const trans0 = new Matrix4;
+			const trans1 = new Matrix4;
+			
+			for(let i = 0; i < this.keys.length - 1; ++i){
+				// if(t < )
+			}
+		}
+		
+		return transform; 
+	}
 }
 
 export default function Skeleton () {
@@ -18,6 +55,7 @@ export default function Skeleton () {
 	const bindTransforms = attributes.createAttribute("bindTransforms");
 	const localTransforms = attributes.createAttribute("localTransforms");
 	const worldTransforms = attributes.createAttribute("worldTransforms");
+	const offsetTransforms = attributes.createAttribute("offsetTransforms");
 	const keys = attributes.createAttribute("keys");
 
 	// const
@@ -41,7 +79,8 @@ export default function Skeleton () {
 		bindTransforms[bone] = new Matrix4;
 		localTransforms[bone] = new Matrix4;
 		worldTransforms[bone] = new Matrix4;
-		keys[bone] = [];
+		offsetTransforms[bone] = new Matrix4;
+		keys[bone] = new Animation;
 		return bone;
 	}
 
@@ -65,12 +104,24 @@ export default function Skeleton () {
 		localTransforms[bone].copy(mat);
 	}
 
+	this.addKey = function (bone, key) {
+		keys[bone].addKey(key);
+	}
+
 	this.getWorldTransform = function (bone) {
 		return worldTransforms[bone];
 	}
 
+	this.computeLocalTransforms = function (t = 0) {
+		this.foreachBone(bone => {
+			localTransforms[bone].copy(keys[bone].transformAt(t))
+		});
+	}
+
 	let computedWorldTransforms = false;
-	this.computeWorldTransforms = function () {
+	this.computeWorldTransforms = function (t = 0) {
+		this.computeLocalTransforms(t);
+
 		this.foreachBone(bone => {
 			const localM = localTransforms[bone];
 			const worldM = worldTransforms[bone];
@@ -86,7 +137,7 @@ export default function Skeleton () {
 
 	this.setBindTransforms = function () {
 		if(!computedWorldTransforms) {
-			this.computeWorldTransforms();
+			this.computeWorldTransforms(0);
 			computedWorldTransforms = true;
 		}
 
@@ -97,12 +148,24 @@ export default function Skeleton () {
 		});
 	}
 
+	this.computeOffsets = function () {
+		this.foreachBone(bone => {
+			const bindM = bindTransforms[bone];
+			const worldM = worldTransforms[bone];
+			offsetTransforms[bone].multiplyMatrices(worldM, bindM);
+		});
+	}
+
+	this.getOffset = function (bone) {
+		return offsetTransforms[bone];
+	}
+
 	this.newBoneAttribute = function (name) {
 		return attributes.createAttribute(name);
 	}
 }
 
-// import 
+
 
 export function SkeletonGraph (skeleton) {
 	const graph = new Graph;
@@ -147,7 +210,7 @@ export function SkeletonRenderer (skeleton) {
 		this.vertices.instanceId = skeleton.newBoneAttribute("vertexInstanceId");
 		this.vertices.bones = [];
 
-		const size = 0.00625;
+		const size = 0.009;
 		const scale = new THREE.Vector3(size, size, size);
 
 		let id = 0;
@@ -164,14 +227,46 @@ export function SkeletonRenderer (skeleton) {
 	}
 
 	this.createEdges = function () {
-		const geometry = new THREE.CylinderGeometry(0.0025, 0.0025, 1, 8);
+		const geometry = new THREE.ConeGeometry(0.008, 1, 5, 1);
 		const material = new THREE.MeshLambertMaterial();
 
 		this.edges = new THREE.InstancedMesh(geometry, material, skeleton.nbBones());
 		this.edges.instanceId = skeleton.newBoneAttribute("edgeInstanceId");
 		this.edges.bones = [];
 
-		
+		let id = 0;
+		const pos = new THREE.Vector3;
+		const quat = new THREE.Quaternion;
+		const scale = new THREE.Vector3;
+		const p = [undefined, undefined];
+		skeleton.foreachBone(bone => {
+			const parent = skeleton.getParent(bone);
+			if(parent != null) {
+				p[0] = positions[bone]
+				p[1] = positions[parent];
+
+				let dir = new THREE.Vector3().subVectors(p[0], p[1]);
+				let len = dir.length();
+				let dirx = new THREE.Vector3().crossVectors(dir.normalize(), new THREE.Vector3(0.0001,0,1));
+				let dirz = new THREE.Vector3().crossVectors(dirx, dir);
+				const matrix = new THREE.Matrix4().fromArray([
+					dirx.x, dir.x, dirz.x, 0,
+					dirx.y, dir.y, dirz.y, 0,
+					dirx.z, dir.z, dirz.z, 0,
+					0, 0, 0, 1]).transpose();
+
+				matrix.decompose(pos, quat, scale);
+				scale.set(1, len, 1);
+				pos.addVectors(p[0], p[1]).divideScalar(2);
+				matrix.compose(pos, quat, scale);
+
+				this.edges.setMatrixAt(id, matrix);
+				this.edges.setColorAt(id, new THREE.Color(0x777777));
+				this.edges.instanceId[bone] = id;
+				this.edges.bones[id] = bone;
+				++id;
+			}
+		});
 	}
 
 	this.computePositions();
