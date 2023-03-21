@@ -260,19 +260,19 @@ for(let i = 0; i < 18; ++i){
 
 
 
-const pointsRenderer = new Renderer(points);
-pointsRenderer.vertices.create();
-pointsRenderer.vertices.addTo(scene);
+// const pointsRenderer = new Renderer(points);
+// pointsRenderer.vertices.create();
+// pointsRenderer.vertices.addTo(scene);
 
 
 
-const skeletonRenderer = new Renderer(skeletonGraph);
-skeletonRenderer.vertices.create();
-skeletonRenderer.edges.create();
-skeletonRenderer.vertices.addTo(scene);
-skeletonRenderer.edges.addTo(scene);
-console.log(skeletonGraph.nbCells(skeletonGraph.vertex))
-console.log(skeletonGraph.nbCells(skeletonGraph.edge))
+// const skeletonRenderer = new Renderer(skeletonGraph);
+// skeletonRenderer.vertices.create();
+// skeletonRenderer.edges.create();
+// skeletonRenderer.vertices.addTo(scene);
+// skeletonRenderer.edges.addTo(scene);
+// console.log(skeletonGraph.nbCells(skeletonGraph.vertex))
+// console.log(skeletonGraph.nbCells(skeletonGraph.edge))
 
 const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
 // const rotation = new THREE.Quaternion();
@@ -310,7 +310,10 @@ skeleton.addKey(bone3, key0);
 skeleton.addKey(bone3, key1);
 skeleton.setLocalTransform(bone3, transform);
 
-const sGraph = SkeletonGraph(skeleton);
+
+// skeleton.getLocalTest(bone1, 1)
+
+// const sGraph = SkeletonGraph(skeleton);
 // const renderer2 = new Renderer(sGraph);
 // renderer2.vertices.create();
 // renderer2.vertices.addTo(scene);
@@ -323,74 +326,90 @@ sRenderer.createEdges();
 scene.add(sRenderer.vertices)
 scene.add(sRenderer.edges)
 
-const geometry = new THREE.ConeGeometry(0.05, 0.255, 5, 1);
-const material = new THREE.MeshLambertMaterial();
-const mesh = new THREE.Mesh(geometry, material)
+// sRenderer.computePositions(17);
+// sRenderer.updateVertices()
+
+window.updateRenderer = function(t) {
+	sRenderer.computePositions(t);
+	sRenderer.updateVertices();
+}
+
+// const geometry = new THREE.ConeGeometry(0.05, 0.255, 5, 1);
+// const material = new THREE.MeshLambertMaterial();
+// const mesh = new THREE.Mesh(geometry, material)
 // scene.add(mesh)
+let frameCount = 0;
 function update (t)
 {
-	// console.log(bonesTarget)
-	let s = t/1000;
-	// console.log(s)
-	// console.log()
-	for(let i = 0; i < bones.length; ++i) {
-		const q = new THREE.Quaternion();
-		const q0 = new THREE.Quaternion();
-		const q1 = new THREE.Quaternion();
-		// q.setFromAxisAngle(worldUp, Math.sin(s / 10));
-		const initRotation = new THREE.Matrix4();
-		initRotation.extractRotation(boneLocal[i]);
-		q0.setFromRotationMatrix(initRotation);
-		const targetRotation = new THREE.Matrix4();
-		targetRotation.extractRotation(bonesTarget[i]);
-		// q.slerpQuaternions(initRotation, targetRotation, 0.5)
-		q1.setFromRotationMatrix(targetRotation);
-		q.copy(q0).slerp(q1, Math.sin(s/2)*0.5+0.5);
-		// const qm = new THREE.Matrix4();
-		const qm = new THREE.Matrix4().makeRotationFromQuaternion(q);
-		// const sm = new THREE.Matrix4().makeScale(1 + Math.sin(s / 10), 1, 1);
+	// if(frameCount++ == 2 )
+		let s = 100 * (Math.sin(t / 1000) / 2 + 0.5);
+		sRenderer.computePositions(s);
+		sRenderer.updateVertices();
+		sRenderer.updateEdges();
+	// 	frameCount = 0;
+	// }
+	// // console.log(bonesTarget)
+	// let s = t/1000;
+	// // console.log(s)
+	// // console.log()
+	// for(let i = 0; i < bones.length; ++i) {
+	// 	const q = new THREE.Quaternion();
+	// 	const q0 = new THREE.Quaternion();
+	// 	const q1 = new THREE.Quaternion();
+	// 	// q.setFromAxisAngle(worldUp, Math.sin(s / 10));
+	// 	const initRotation = new THREE.Matrix4();
+	// 	initRotation.extractRotation(boneLocal[i]);
+	// 	q0.setFromRotationMatrix(initRotation);
+	// 	const targetRotation = new THREE.Matrix4();
+	// 	targetRotation.extractRotation(bonesTarget[i]);
+	// 	// q.slerpQuaternions(initRotation, targetRotation, 0.5)
+	// 	q1.setFromRotationMatrix(targetRotation);
+	// 	q.copy(q0).slerp(q1, Math.sin(s/2)*0.5+0.5);
+	// 	// const qm = new THREE.Matrix4();
+	// 	const qm = new THREE.Matrix4().makeRotationFromQuaternion(q);
+	// 	// const sm = new THREE.Matrix4().makeScale(1 + Math.sin(s / 10), 1, 1);
 
-		// console.log(i, q, q0, q1)
-		// console.log(initRotation, targetRotation)
+	// 	// console.log(i, q, q0, q1)
+	// 	// console.log(initRotation, targetRotation)
 
 
-		const p = boneParent[i];
-		if(p != null) {
-			const mb = boneLocal[i].clone();
-			const mp = boneWorld[p].clone();
+	// 	const p = boneParent[i];
+	// 	if(p != null) {
+	// 		const mb = boneLocal[i].clone();
+	// 		const mp = boneWorld[p].clone();
 	
-			qm.multiply(mb);
-			mp.multiply(qm);
-			boneWorld[i].copy(mp);
-			// console.log(i, boneWorld[i])
-		}
-		else{
-			const mb = boneLocal[i].clone();
-			qm.multiply(mb);
-			boneWorld[i].copy(mb);
-		}
-	}
+	// 		qm.multiply(mb);
+	// 		mp.multiply(qm);
+	// 		boneWorld[i].copy(mp);
+	// 		// console.log(i, boneWorld[i])
+	// 	}
+	// 	else{
+	// 		const mb = boneLocal[i].clone();
+	// 		qm.multiply(mb);
+	// 		boneWorld[i].copy(mb);
+	// 	}
+	// }
 
-	for(let i = 0; i < bones.length; ++i) {
-		let vb = boneVert[i];
-		position[skeletonGraph.cell(skeletonGraph.vertex, vb)] = new THREE.Vector3().applyMatrix4(boneWorld[i]);
-		// console.log(position[skeletonGraph.cell(skeletonGraph.vertex, vb)])
-	}
-	skeletonRenderer.vertices.update()
-	skeletonRenderer.edges.update()
+	// for(let i = 0; i < bones.length; ++i) {
+	// 	let vb = boneVert[i];
+	// 	position[skeletonGraph.cell(skeletonGraph.vertex, vb)] = new THREE.Vector3().applyMatrix4(boneWorld[i]);
+	// 	// console.log(position[skeletonGraph.cell(skeletonGraph.vertex, vb)])
+	// }
+	// skeletonRenderer.vertices.update()
+	// skeletonRenderer.edges.update()
 
-	for(let i = 0; i < 18; ++i){
-		let p0 = new THREE.Vector3();
-		let pb = pbind[i].clone();
-		for(let j = 0; j < pweights[i].length; ++j){
-			let b = pweights[i][j];
-			let bw = boneWorld[b.b].clone();
-			bw.multiply(bonesBind[b.b]);
-			p0.addScaledVector(pb.clone().applyMatrix4(bw), b.w);
-		}
-		ppos[i].copy(p0);
-	}
-	pointsRenderer.vertices.update();
+	// for(let i = 0; i < 18; ++i){
+	// 	let p0 = new THREE.Vector3();
+	// 	let pb = pbind[i].clone();
+	// 	for(let j = 0; j < pweights[i].length; ++j){
+	// 		let b = pweights[i][j];
+	// 		let bw = boneWorld[b.b].clone();
+	// 		bw.multiply(bonesBind[b.b]);
+	// 		p0.addScaledVector(pb.clone().applyMatrix4(bw), b.w);
+	// 	}
+	// 	ppos[i].copy(p0);
+	// }
+	// pointsRenderer.vertices.update();
 }
 
 function render()
@@ -398,11 +417,14 @@ function render()
 	renderer.render(scene, camera);
 }
 
+// let prevT = 0;
 function mainloop(t)
 {
     update(t);
     render();
-    requestAnimationFrame(mainloop);
+	requestAnimationFrame(mainloop);
+	// console.log((1)/((t - prevT)/1000))
+	// prevT = t
 }
 
 mainloop(0);

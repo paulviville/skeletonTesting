@@ -31,18 +31,41 @@ function Animation () {
 		if(this.keys.length == 0)
 			return transform;
 			
-		console.log(this.keys.length)
-		if(t < this.keys[this.keys.length - 1].t) /// invert < -> >=
+		let it;
+		for(it = 0; it < this.keys.length; ++it) {
+			if(t <= this.keys[it].t)
+				break;
+		}
+		if(it == 0) /// before or on first key -> first key
+			transform.copy(this.keys[0].mat);
+		else if (it == this.keys.length) /// after last key -> last key
 			transform.copy(this.keys[this.keys.length - 1].mat);
-		else {
+		else { /// between two keys -> interpolation
+			const ratio = (t - this.keys[it - 1].t)/(this.keys[it].t - this.keys[it - 1].t);
+
+			const mat = new Matrix4;
 			const trans0 = new Matrix4;
 			const trans1 = new Matrix4;
+
+			trans0.copy(this.keys[it - 1].mat);
+			trans1.copy(this.keys[it].mat);
+
+			const q0 = new THREE.Quaternion;
+			const q1 = new THREE.Quaternion;
+
+			/// FIX only rotation for now cuz bone length often constant
+			/// TODO separate rotation & translation for more efficient compute
+			q0.setFromRotationMatrix(mat.extractRotation(trans0));
+			mat.invert();
+			trans0.multiplyMatrices(mat, trans0)
+
+			q1.setFromRotationMatrix(mat.extractRotation(trans1));
+			q0.slerp(q1, ratio);
+			mat.makeRotationFromQuaternion(q0);
 			
-			for(let i = 0; i < this.keys.length - 1; ++i){
-				// if(t < )
-			}
+			trans0.multiplyMatrices(mat, trans0)
+			transform.copy(trans0);
 		}
-		
 		return transform; 
 	}
 }
@@ -116,15 +139,17 @@ export default function Skeleton () {
 		this.foreachBone(bone => {
 			localTransforms[bone].copy(keys[bone].transformAt(t))
 		});
+		// console.table(localTransforms[1])
 	}
 
-	let computedWorldTransforms = false;
+	// let computedWorldTransforms = false;
 	this.computeWorldTransforms = function (t = 0) {
 		this.computeLocalTransforms(t);
 
 		this.foreachBone(bone => {
 			const localM = localTransforms[bone];
 			const worldM = worldTransforms[bone];
+
 			worldM.identity();
 
 			const parent = parents[bone];
@@ -193,13 +218,16 @@ export function SkeletonGraph (skeleton) {
 
 export function SkeletonRenderer (skeleton) {
 	const positions = skeleton.newBoneAttribute("position");
+	skeleton.foreachBone(bone => {
+		positions[bone] = new THREE.Vector3;
+	});
 
-	this.computePositions = function() {
-		skeleton.computeWorldTransforms();
+	this.computePositions = function(t = 0) {
+		skeleton.computeWorldTransforms(t);
 		skeleton.foreachBone(bone => {
 			const mat = skeleton.getWorldTransform(bone);
-			positions[bone] = new THREE.Vector3().applyMatrix4(mat);
-		})
+			positions[bone].set(0,0,0).applyMatrix4(mat);
+		});
 	}
 
 	this.createVertices = function () {
@@ -225,6 +253,21 @@ export function SkeletonRenderer (skeleton) {
 			++id;
 		});
 	}
+
+	this.updateVertices = function () {
+		const size = 0.009;
+		const scale = new THREE.Vector3(size, size, size);
+		skeleton.foreachBone(bone => {
+			const id = this.vertices.instanceId[bone];
+			const matrix = new THREE.Matrix4;
+			matrix.setPosition(positions[bone]);
+			matrix.scale(scale);
+			this.vertices.setMatrixAt(id, matrix);
+		});
+		this.vertices.instanceMatrix.needsUpdate = true;
+	}
+
+	// this.
 
 	this.createEdges = function () {
 		const geometry = new THREE.ConeGeometry(0.008, 1, 5, 1);
@@ -267,6 +310,40 @@ export function SkeletonRenderer (skeleton) {
 				++id;
 			}
 		});
+	}
+
+	this.updateEdges = function () {
+		const pos = new THREE.Vector3;
+		const quat = new THREE.Quaternion;
+		const scale = new THREE.Vector3;
+		const p = [undefined, undefined];
+		skeleton.foreachBone(bone => {
+			const parent = skeleton.getParent(bone);
+			if(parent != null) {
+				const id = this.edges.instanceId[bone];
+
+				p[0] = positions[bone]
+				p[1] = positions[parent];
+
+				let dir = new THREE.Vector3().subVectors(p[0], p[1]);
+				let len = dir.length();
+				let dirx = new THREE.Vector3().crossVectors(dir.normalize(), new THREE.Vector3(0.0001,0,1));
+				let dirz = new THREE.Vector3().crossVectors(dirx, dir);
+				const matrix = new THREE.Matrix4().fromArray([
+					dirx.x, dir.x, dirz.x, 0,
+					dirx.y, dir.y, dirz.y, 0,
+					dirx.z, dir.z, dirz.z, 0,
+					0, 0, 0, 1]).transpose();
+
+				matrix.decompose(pos, quat, scale);
+				scale.set(1, len, 1);
+				pos.addVectors(p[0], p[1]).divideScalar(2);
+				matrix.compose(pos, quat, scale);
+
+				this.edges.setMatrixAt(id, matrix);
+			}
+		});
+		this.edges.instanceMatrix.needsUpdate = true;
 	}
 
 	this.computePositions();
