@@ -9,7 +9,7 @@ import DualQuaternion from './DualQuaternion.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 1000.0);
-camera.position.set(0, 0, 2);
+camera.position.set(0, 0, 3);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -24,12 +24,13 @@ const orbit_controls = new OrbitControls(camera, renderer.domElement)
 
 const geometry = new THREE.ConeGeometry(0.1, 0.1, 16, 1);
 const material = new THREE.MeshLambertMaterial();
+const material0 = new THREE.MeshLambertMaterial({color: 0xff0000});
 const cone = new THREE.Mesh(geometry, material)
 
 const geoSphere = new THREE.SphereGeometry(0.025, 32, 32);
-const s0 = new THREE.Mesh(geoSphere, material)
-const s1 = new THREE.Mesh(geoSphere, material)
-s1.position.set(0, 0.5, 0)
+const s0 = new THREE.Mesh(geometry, material)
+const s1 = new THREE.Mesh(geometry, material0)
+s1.position.set(0, 0, 0)
 
 
 
@@ -37,35 +38,37 @@ s1.position.set(0, 0.5, 0)
 // const rot = new THREE.Quaternion(0, 0, 0, 1);
 // const point = new THREE.Vector3(1,2,3);
 
-const rot = new THREE.Quaternion(0, 0, 0, 1);
-const trans = new THREE.Vector3(1, 2, 3);
-const axis = new THREE.Vector3(0, 0, 1);
-const angle = Math.PI / 2;
-const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-const dualPart = new THREE.Quaternion().copy(rot).multiply(new THREE.Quaternion(0, trans.x, trans.y, trans.z));
-// const tempQ = dualPart.clone().multiply(realPart.clone().conjugate()).multiplyScalar(0.5)
-// dualPart.multiply(realPart.clone().conjugate())
-// dualPart.x *= 0.5; dualPart.y *= 0.5; dualPart.z *= 0.5; dualPart.w *= 0.5;
-// const dualQuaternion = new THREE.Quaternion().copy(realPart).add(dualPart);
-const dualQuaternion = realPart.clone();
-dualQuaternion.x += dualPart.x;
-dualQuaternion.y += dualPart.y;
-dualQuaternion.z += dualPart.z;
-dualQuaternion.w += dualPart.w;
+// const rot = new THREE.Quaternion(0, 0, 0, 1);
+// const trans = new THREE.Vector3(0,0.5, 0);
+// const axis = new THREE.Vector3(1, 0, 0);
+// // const angle = Math.PI/2;
+// const angle = 0;
 
-const point = new THREE.Vector3();
-// point.applyQuaternion(dualQuaternion);
-console.log(point)
+// const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+// // const dualPart = new THREE.Quaternion().copy(rot).multiply(new THREE.Quaternion(0, trans.x, trans.y, trans.z));
+// // // const tempQ = dualPart.clone().multiply(realPart.clone().conjugate()).multiplyScalar(0.5)
+// // // dualPart.multiply(realPart.clone().conjugate())
+// // // dualPart.x *= 0.5; dualPart.y *= 0.5; dualPart.z *= 0.5; dualPart.w *= 0.5;
+// // // const dualQuaternion = new THREE.Quaternion().copy(realPart).add(dualPart);
+// // const dualQuaternion = realPart.clone();
+// // dualQuaternion.x += dualPart.x;
+// // dualQuaternion.y += dualPart.y;
+// // dualQuaternion.z += dualPart.z;
+// // dualQuaternion.w += dualPart.w;
 
-const dqq = DualQuaternion.fromRotTrans(rot, trans);
-console.log(dqq);
-console.log(dqq.transform(point))
-// const dq = new DualQuaternion(new THREE.Quaternion(0,0,0,1), new THREE.Quaternion(0, 0, 1, 0));
-// dq.normalize()
-// console.log(dq)
+// const point = new THREE.Vector3();
+// // point.applyQuaternion(dualQuaternion);
+// console.log(point)
+// console.log(realPart)
+// const dqq = DualQuaternion.fromRotTrans(realPart, trans);
+// console.log(dqq);
+// console.log(dqq.transform(point))
+// // const dq = new DualQuaternion(new THREE.Quaternion(0,0,0,1), new THREE.Quaternion(0, 0, 1, 0));
+// // dq.normalize()
+// // console.log(dq)
 
-
-
+// s1.position.copy(dqq.transform(point))
+// console.log(s1.position.length(), trans.length())
 // const testP = dq.transform(trans);
 // console.log(testP)
 
@@ -372,6 +375,7 @@ window.updateRenderer = function(t) {
 	sRenderer.updateVertices();
 }
 
+console.log(s1)
 let frameCount = 0;
 function update (t)
 {
@@ -379,6 +383,29 @@ function update (t)
 		sRenderer.computePositions(s);
 		sRenderer.updateVertices();
 		sRenderer.updateEdges();
+
+
+
+
+		const rot = new THREE.Quaternion(0, 0, 0, 1);
+		const trans = new THREE.Vector3(0, 1, 1);
+		const axis = new THREE.Vector3(0, 1, 0);
+		// const angle = Math.PI/2;
+		const angle = t / 1000;
+		// const angle = 0;
+
+		const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+
+
+const point = new THREE.Vector3(0, 0, 1);
+const dqq = DualQuaternion.fromRotTrans(realPart, trans);
+// console.log(dqq);
+// console.log(dqq.transform(point))
+	s0.position.copy(point.clone().applyQuaternion(realPart))
+	s1.position.copy(dqq.transform(point))
+	s1.quaternion.copy(realPart)
+	s0.quaternion.copy(realPart)
+	// console.log(s1.position.length(), trans.length())
 }
 
 function render()

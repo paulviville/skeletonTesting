@@ -100,13 +100,12 @@ export default class DualQuaternion {
         const x =  0.5*( t.x * q.w + t.y * q.z - t.z * q.y);
         const y =  0.5*(-t.x * q.z + t.y * q.w + t.z * q.x);
         const z =  0.5*( t.x * q.y - t.y * q.x + t.z * q.w);
-
+		// console.log(x, y, z, w)
 		return new DualQuaternion(q, new Quaternion(x, y, z, w));
 	}
 
 	transform(p) {
 		const norm = this.real.length();
-		console.log(norm)
 		const qr = new Quaternion(this.real.x / norm, this.real.y / norm, this.real.z / norm, this.real.w / norm);
 		const qd = new Quaternion(this.dual.x / norm, this.dual.y / norm, this.dual.z / norm, this.dual.w / norm)
 	
@@ -115,10 +114,11 @@ export default class DualQuaternion {
 
 		const trans = new Vector3().crossVectors(vr, vd);
 		trans.add(vd.multiplyScalar(qr.w));
-		trans.add(vr.multiplyScalar(-qr.w));
+		trans.add(vr.multiplyScalar(-qd.w));
 		trans.multiplyScalar(2);
 
 		const transP = p.clone();
+		console.log(trans)
 		transP.applyQuaternion(qr);
 		transP.add(trans);
 		return transP
