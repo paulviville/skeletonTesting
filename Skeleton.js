@@ -22,8 +22,6 @@ function Animation () {
 			else 
 				return 1;
 		});
-
-		console.log(this.keys)
 	}
 
 	this.transformAt = function (t) {
@@ -191,31 +189,6 @@ export default function Skeleton () {
 }
 
 
-
-export function SkeletonGraph (skeleton) {
-	const graph = new Graph;
-	const vertex = graph.vertex;
-	graph.setEmbeddings(vertex);
-	const position = graph.addAttribute(vertex, "position");
-
-	const gvd = skeleton.newBoneAttribute("gvd");
-	skeleton.computeWorldTransforms();
-	skeleton.foreachBone(bone => {
-		const v = graph.addVertex();
-		gvd[bone] = v;
-
-		const parent = skeleton.getParent(bone);
-		if(parent != root) {
-			graph.connectVertices(gvd[parent], v);
-		}
-
-		const transform = skeleton.getWorldTransform(bone);
-		position[graph.cell(vertex, v)] = new Vector3().applyMatrix4(transform);
-	});
-
-	return graph;
-}
-
 export function SkeletonRenderer (skeleton) {
 	const positions = skeleton.newBoneAttribute("position");
 	skeleton.foreachBone(bone => {
@@ -270,7 +243,7 @@ export function SkeletonRenderer (skeleton) {
 	// this.
 
 	this.createEdges = function () {
-		const geometry = new THREE.ConeGeometry(0.008, 1, 5, 1);
+		const geometry = new THREE.ConeGeometry(0.0085, 1, 16, 1);
 		const material = new THREE.MeshLambertMaterial();
 
 		this.edges = new THREE.InstancedMesh(geometry, material, skeleton.nbBones());

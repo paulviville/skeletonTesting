@@ -3,7 +3,8 @@ import Graph from './CMapJS/CMap/Graph.js';
 import Renderer from './CMapJS/Rendering/Renderer.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
 import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
-import Skeleton, {Key, SkeletonGraph, SkeletonRenderer } from './Skeleton.js';
+import Skeleton, {Key, SkeletonRenderer } from './Skeleton.js';
+import DualQuaternion from './DualQuaternion.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -21,6 +22,56 @@ scene.add(pointLight0);
 
 const orbit_controls = new OrbitControls(camera, renderer.domElement)
 
+const geometry = new THREE.ConeGeometry(0.1, 0.1, 16, 1);
+const material = new THREE.MeshLambertMaterial();
+const cone = new THREE.Mesh(geometry, material)
+
+const geoSphere = new THREE.SphereGeometry(0.025, 32, 32);
+const s0 = new THREE.Mesh(geoSphere, material)
+const s1 = new THREE.Mesh(geoSphere, material)
+s1.position.set(0, 0.5, 0)
+
+
+
+// const trans = new THREE.Vector3(1,2,3);
+// const rot = new THREE.Quaternion(0, 0, 0, 1);
+// const point = new THREE.Vector3(1,2,3);
+
+const rot = new THREE.Quaternion(0, 0, 0, 1);
+const trans = new THREE.Vector3(1, 2, 3);
+const axis = new THREE.Vector3(0, 0, 1);
+const angle = Math.PI / 2;
+const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+const dualPart = new THREE.Quaternion().copy(rot).multiply(new THREE.Quaternion(0, trans.x, trans.y, trans.z));
+// const tempQ = dualPart.clone().multiply(realPart.clone().conjugate()).multiplyScalar(0.5)
+// dualPart.multiply(realPart.clone().conjugate())
+// dualPart.x *= 0.5; dualPart.y *= 0.5; dualPart.z *= 0.5; dualPart.w *= 0.5;
+// const dualQuaternion = new THREE.Quaternion().copy(realPart).add(dualPart);
+const dualQuaternion = realPart.clone();
+dualQuaternion.x += dualPart.x;
+dualQuaternion.y += dualPart.y;
+dualQuaternion.z += dualPart.z;
+dualQuaternion.w += dualPart.w;
+
+const point = new THREE.Vector3();
+// point.applyQuaternion(dualQuaternion);
+console.log(point)
+
+const dqq = DualQuaternion.fromRotTrans(rot, trans);
+console.log(dqq);
+console.log(dqq.transform(point))
+// const dq = new DualQuaternion(new THREE.Quaternion(0,0,0,1), new THREE.Quaternion(0, 0, 1, 0));
+// dq.normalize()
+// console.log(dq)
+
+
+
+// const testP = dq.transform(trans);
+// console.log(testP)
+
+scene.add(cone)
+scene.add(s0)
+scene.add(s1)
 
 window.addEventListener('resize', function() {
     const width = window.innerWidth;
@@ -247,7 +298,6 @@ pweights[17] = pweights[8];
 for(let i = 0; i < 18; ++i){
 	let p0 = new THREE.Vector3();
 	let pb = pbind[i].clone();
-	console.log(i, pweights[i])
 	for(let j = 0; j < pweights[i].length; ++j){
 		let b = pweights[i][j];
 		let bw = boneWorld[b.b].clone();
@@ -259,32 +309,19 @@ for(let i = 0; i < 18; ++i){
 
 
 
-
-// const pointsRenderer = new Renderer(points);
-// pointsRenderer.vertices.create();
-// pointsRenderer.vertices.addTo(scene);
-
-
-
-// const skeletonRenderer = new Renderer(skeletonGraph);
-// skeletonRenderer.vertices.create();
-// skeletonRenderer.edges.create();
-// skeletonRenderer.vertices.addTo(scene);
-// skeletonRenderer.edges.addTo(scene);
-// console.log(skeletonGraph.nbCells(skeletonGraph.vertex))
-// console.log(skeletonGraph.nbCells(skeletonGraph.edge))
-
 const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
-// const rotation = new THREE.Quaternion();
-// q1.setFromAxisAngle(worldUp, Math.PI / 12);
-const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 12));
+
+const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 8));
 const transform = new THREE.Matrix4().multiplyMatrices(rotation, translation)
 const key0 = new Key(0, transform);
 
-const rotation1 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 12));
+const rotation1 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 8));
 const transform1 = new THREE.Matrix4().multiplyMatrices(rotation1, translation)
 const key1 = new Key(100, transform1);
-// const key2 = new Key(50, transform1);
+
+const rotation2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI / 6));
+const transform2 = new THREE.Matrix4().multiplyMatrices(rotation2, translation)
+const key2 = new Key(50, transform2);
 
 const skeleton = new Skeleton;
 console.log(skeleton);
@@ -298,6 +335,7 @@ const bone1 = skeleton.newBone();
 skeleton.setParent(bone1, bone0);
 skeleton.addKey(bone1, key0);
 skeleton.addKey(bone1, key1);
+skeleton.addKey(bone1, key2);
 skeleton.setLocalTransform(bone1, transform);
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
@@ -334,82 +372,13 @@ window.updateRenderer = function(t) {
 	sRenderer.updateVertices();
 }
 
-// const geometry = new THREE.ConeGeometry(0.05, 0.255, 5, 1);
-// const material = new THREE.MeshLambertMaterial();
-// const mesh = new THREE.Mesh(geometry, material)
-// scene.add(mesh)
 let frameCount = 0;
 function update (t)
 {
-	// if(frameCount++ == 2 )
 		let s = 100 * (Math.sin(t / 1000) / 2 + 0.5);
 		sRenderer.computePositions(s);
 		sRenderer.updateVertices();
 		sRenderer.updateEdges();
-	// 	frameCount = 0;
-	// }
-	// // console.log(bonesTarget)
-	// let s = t/1000;
-	// // console.log(s)
-	// // console.log()
-	// for(let i = 0; i < bones.length; ++i) {
-	// 	const q = new THREE.Quaternion();
-	// 	const q0 = new THREE.Quaternion();
-	// 	const q1 = new THREE.Quaternion();
-	// 	// q.setFromAxisAngle(worldUp, Math.sin(s / 10));
-	// 	const initRotation = new THREE.Matrix4();
-	// 	initRotation.extractRotation(boneLocal[i]);
-	// 	q0.setFromRotationMatrix(initRotation);
-	// 	const targetRotation = new THREE.Matrix4();
-	// 	targetRotation.extractRotation(bonesTarget[i]);
-	// 	// q.slerpQuaternions(initRotation, targetRotation, 0.5)
-	// 	q1.setFromRotationMatrix(targetRotation);
-	// 	q.copy(q0).slerp(q1, Math.sin(s/2)*0.5+0.5);
-	// 	// const qm = new THREE.Matrix4();
-	// 	const qm = new THREE.Matrix4().makeRotationFromQuaternion(q);
-	// 	// const sm = new THREE.Matrix4().makeScale(1 + Math.sin(s / 10), 1, 1);
-
-	// 	// console.log(i, q, q0, q1)
-	// 	// console.log(initRotation, targetRotation)
-
-
-	// 	const p = boneParent[i];
-	// 	if(p != null) {
-	// 		const mb = boneLocal[i].clone();
-	// 		const mp = boneWorld[p].clone();
-	
-	// 		qm.multiply(mb);
-	// 		mp.multiply(qm);
-	// 		boneWorld[i].copy(mp);
-	// 		// console.log(i, boneWorld[i])
-	// 	}
-	// 	else{
-	// 		const mb = boneLocal[i].clone();
-	// 		qm.multiply(mb);
-	// 		boneWorld[i].copy(mb);
-	// 	}
-	// }
-
-	// for(let i = 0; i < bones.length; ++i) {
-	// 	let vb = boneVert[i];
-	// 	position[skeletonGraph.cell(skeletonGraph.vertex, vb)] = new THREE.Vector3().applyMatrix4(boneWorld[i]);
-	// 	// console.log(position[skeletonGraph.cell(skeletonGraph.vertex, vb)])
-	// }
-	// skeletonRenderer.vertices.update()
-	// skeletonRenderer.edges.update()
-
-	// for(let i = 0; i < 18; ++i){
-	// 	let p0 = new THREE.Vector3();
-	// 	let pb = pbind[i].clone();
-	// 	for(let j = 0; j < pweights[i].length; ++j){
-	// 		let b = pweights[i][j];
-	// 		let bw = boneWorld[b.b].clone();
-	// 		bw.multiply(bonesBind[b.b]);
-	// 		p0.addScaledVector(pb.clone().applyMatrix4(bw), b.w);
-	// 	}
-	// 	ppos[i].copy(p0);
-	// }
-	// pointsRenderer.vertices.update();
 }
 
 function render()
