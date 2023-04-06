@@ -4,8 +4,15 @@ import Renderer from './CMapJS/Rendering/Renderer.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
 import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
 import Skeleton, {Key, SkeletonRenderer } from './Skeleton.js';
-import DualQuaternion from './DualQuaternion.js';
-
+// import DualQuaternion from './DualQuaternion.js';
+import {DualQuaternion} from './DualQuaternion.js';
+// import * as glm from './glmat/index.js';
+import * as quat2 from "./glmat/quat2.js"
+import * as quat from "./glmat/quat.js"
+import * as vec3 from "./glmat/vec3.js"
+console.log(quat2)
+// let t = new quat2
+// glMatrix.quat
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 1000.0);
@@ -25,11 +32,15 @@ const orbit_controls = new OrbitControls(camera, renderer.domElement)
 const geometry = new THREE.ConeGeometry(0.1, 0.1, 16, 1);
 const material = new THREE.MeshLambertMaterial();
 const material0 = new THREE.MeshLambertMaterial({color: 0xff0000});
+const material1 = new THREE.MeshLambertMaterial({color: 0x00ff00});
+const material2 = new THREE.MeshLambertMaterial({color: 0xffff00});
 const cone = new THREE.Mesh(geometry, material)
 
 const geoSphere = new THREE.SphereGeometry(0.025, 32, 32);
 const s0 = new THREE.Mesh(geometry, material)
 const s1 = new THREE.Mesh(geometry, material0)
+const s2 = new THREE.Mesh(geometry, material1)
+const s3 = new THREE.Mesh(geometry, material2)
 s1.position.set(0, 0, 0)
 
 
@@ -75,6 +86,8 @@ s1.position.set(0, 0, 0)
 scene.add(cone)
 scene.add(s0)
 scene.add(s1)
+scene.add(s2)
+scene.add(s3)
 
 window.addEventListener('resize', function() {
     const width = window.innerWidth;
@@ -312,26 +325,41 @@ for(let i = 0; i < 18; ++i){
 
 
 
-const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
+const translation = new THREE.Quaternion(0, 0.1, 0, 0);
+// const translation = new THREE.Matrix4().makeTranslation(0, 0.1, 0);
 
-const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 8));
-const transform = new THREE.Matrix4().multiplyMatrices(rotation, translation)
+// const rotation = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 8));
+// const transform = new THREE.Matrix4().multiplyMatrices(rotation, translation)
+const rotation = new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 6);
+// const transform = new DualQuaternion(rotation.clone(), translation.clone());
+const transform = DualQuaternion.setFromRotationTranslation(rotation.clone(), translation.clone());
+transform.normalize();
 const key0 = new Key(0, transform);
 
-const rotation1 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 8));
-const transform1 = new THREE.Matrix4().multiplyMatrices(rotation1, translation)
+// const rotation1 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 8));
+// const transform1 = new THREE.Matrix4().multiplyMatrices(rotation1, translation)
+const rotation1 = new THREE.Quaternion().setFromAxisAngle(worldUp, -Math.PI / 6);
+// const transform1 = new DualQuaternion(rotation1.clone(), translation.clone());
+const transform1 = DualQuaternion.setFromRotationTranslation(rotation1.clone(), translation.clone());
+transform1.normalize();
 const key1 = new Key(100, transform1);
 
-const rotation2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI / 6));
-const transform2 = new THREE.Matrix4().multiplyMatrices(rotation2, translation)
+// const rotation2 = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI / 6));
+// const transform2 = new THREE.Matrix4().multiplyMatrices(rotation2, translation)
+const rotation2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0), Math.PI / 6);
+// const transform2 = new DualQuaternion(rotation2.clone(), translation.clone());
+const transform2 = DualQuaternion.setFromRotationTranslation(rotation2.clone(), translation.clone());
+transform2.normalize();
 const key2 = new Key(50, transform2);
 
+
+console.log(transform)
 const skeleton = new Skeleton;
 console.log(skeleton);
 const root = skeleton.newBone("root");
 const bone0 = skeleton.newBone();
 skeleton.setParent(bone0, root);
-skeleton.setLocalTransform(bone0, transform);
+// skeleton.setLocalTransform(bone0, transform.clone());
 skeleton.addKey(bone0, key0);
 skeleton.addKey(bone0, key1);
 const bone1 = skeleton.newBone();
@@ -339,17 +367,17 @@ skeleton.setParent(bone1, bone0);
 skeleton.addKey(bone1, key0);
 skeleton.addKey(bone1, key1);
 skeleton.addKey(bone1, key2);
-skeleton.setLocalTransform(bone1, transform);
+// skeleton.setLocalTransform(bone1, transform.clone());
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
 skeleton.addKey(bone2, key0);
 skeleton.addKey(bone2, key1);
-skeleton.setLocalTransform(bone2, transform);
+// skeleton.setLocalTransform(bone2, transform.clone());
 const bone3 = skeleton.newBone();
 skeleton.setParent(bone3, bone2);
 skeleton.addKey(bone3, key0);
 skeleton.addKey(bone3, key1);
-skeleton.setLocalTransform(bone3, transform);
+// skeleton.setLocalTransform(bone3, transform.clone());
 
 
 // skeleton.getLocalTest(bone1, 1)
@@ -367,8 +395,19 @@ sRenderer.createEdges();
 scene.add(sRenderer.vertices)
 scene.add(sRenderer.edges)
 
-// sRenderer.computePositions(17);
-// sRenderer.updateVertices()
+window.checkLocals = function() 
+{
+	skeleton.foreachBone(b => {
+		console.log(skeleton.getLocalTransform(b));
+	});
+}
+
+window.checkworlds = function() 
+{
+	skeleton.foreachBone(b => {
+		console.log(skeleton.getLocalTransform(b));
+	});
+}
 
 window.updateRenderer = function(t) {
 	sRenderer.computePositions(t);
@@ -379,33 +418,66 @@ console.log(s1)
 let frameCount = 0;
 function update (t)
 {
-		let s = 100 * (Math.sin(t / 1000) / 2 + 0.5);
-		sRenderer.computePositions(s);
-		sRenderer.updateVertices();
-		sRenderer.updateEdges();
+	let s = 100 * (Math.sin(t / 1000) / 2 + 0.5);
+	sRenderer.computePositions(s);
+	sRenderer.updateVertices();
+	sRenderer.updateEdges();
 
 
+const rot = new THREE.Quaternion(0, 0, 0, 1);
+const trans = new THREE.Vector3(0, 0.5, 0);
+const trans1 = new THREE.Vector3(0, -0.5, 0);
+const axis = new THREE.Vector3(0, 1, 0);
+const axis2 = new THREE.Vector3(1, 0, 0);
+// const angle = Math.PI/2;
+const angle = t / 2000;
+// const angle = 0;
+
+const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+const realPart2 = new THREE.Quaternion().setFromAxisAngle(axis2, -angle);
 
 
-		const rot = new THREE.Quaternion(0, 0, 0, 1);
-		const trans = new THREE.Vector3(0, 1, 1);
-		const axis = new THREE.Vector3(0, 1, 0);
-		// const angle = Math.PI/2;
-		const angle = t / 1000;
-		// const angle = 0;
+const point = new THREE.Vector3(0, 0, 0);
+const dqq = DualQuaternion.setFromRotationTranslation(realPart, trans);
+const dq0 = DualQuaternion.setFromRotationTranslation(realPart2, trans1);
+dq0.normalize()
+dqq.normalize()
+let dq2 = dq0.clone().multiply(dq0);
+let dq1 = dq0.clone().multiply(dqq);
+dq1.normalize()
+dq2.normalize()
+// let dq3 = dqq.clone().invert();
+// let dq3 = new DualQuaternion().lerpDualQuaternions(dqq, dq0, 0.5).normalize();
+let dq3 = dqq.clone().lerpShortest(dq2, Math.sin(t/200)*0.5+0.5).normalize();
+// console.log(dq3)
 
-		const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-
-
-const point = new THREE.Vector3(0, 0, 1);
-const dqq = DualQuaternion.fromRotTrans(realPart, trans);
 // console.log(dqq);
 // console.log(dqq.transform(point))
-	s0.position.copy(point.clone().applyQuaternion(realPart))
+	cone.position.copy(point)
+	// s0.position.copy(point.clone().applyQuaternion(realPart))
+	s0.position.copy(dq0.transform(point))
 	s1.position.copy(dqq.transform(point))
-	s1.quaternion.copy(realPart)
-	s0.quaternion.copy(realPart)
+	// dq0.multiply(dqq).normalize();
+	// let dq1 = dqq.clone().multiply(dq0);
+	// let dq2 = dq0.clone().multiply(dqq);
+	// console.log(dq0)
+
+	// let dq1 = dq0.clone().multiplyScalar(0.5).addScaledDualQuaternion(dqq, 0.5)
+
+	s2.position.copy(dq2.transform(point))
+	s3.position.copy(dq3.transform(point))
+	s0.quaternion.copy(dq0.real)
+	s1.quaternion.copy(dqq.real)
+	s2.quaternion.copy(dq2.real)
+	s3.quaternion.copy(dq3.real)
+	// s0.quaternion.copy(realPart)
 	// console.log(s1.position.length(), trans.length())
+	// console.log(s2.position)
+
+	// console.log(dq1.getTranslation(), s2.position)
+
+	// console.log(cone.position.clone().sub(s0.position).length())
+	// console.log(s1.position.clone().sub(s2.position).length())
 }
 
 function render()

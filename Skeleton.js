@@ -2,6 +2,7 @@ import AttributesContainer from './CMapJS/CMap/AttributeContainer.js';
 import Graph from './CMapJS/CMap/Graph.js';
 import { Matrix4, Vector3 } from './CMapJS/Libs/three.module.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
+import {DualQuaternion} from './DualQuaternion.js';
 
 const root = null;
 
@@ -25,7 +26,7 @@ function Animation () {
 	}
 
 	this.transformAt = function (t) {
-		const transform = new Matrix4;
+		const transform = new DualQuaternion;
 		if(this.keys.length == 0)
 			return transform;
 			
@@ -41,28 +42,14 @@ function Animation () {
 		else { /// between two keys -> interpolation
 			const ratio = (t - this.keys[it - 1].t)/(this.keys[it].t - this.keys[it - 1].t);
 
-			const mat = new Matrix4;
-			const trans0 = new Matrix4;
-			const trans1 = new Matrix4;
+			const trans0 = new DualQuaternion;
+			const trans1 = new DualQuaternion;
 
 			trans0.copy(this.keys[it - 1].mat);
 			trans1.copy(this.keys[it].mat);
 
-			const q0 = new THREE.Quaternion;
-			const q1 = new THREE.Quaternion;
-
-			/// FIX only rotation for now cuz bone length often constant
-			/// TODO separate rotation & translation for more efficient compute
-			q0.setFromRotationMatrix(mat.extractRotation(trans0));
-			mat.invert();
-			trans0.multiplyMatrices(mat, trans0)
-
-			q1.setFromRotationMatrix(mat.extractRotation(trans1));
-			q0.slerp(q1, ratio);
-			mat.makeRotationFromQuaternion(q0);
-			
-			trans0.multiplyMatrices(mat, trans0)
-			transform.copy(trans0);
+			transform.lerpDualQuaternions(trans1, trans0, ratio);
+			transform.normalize();
 		}
 		return transform; 
 	}
@@ -97,10 +84,10 @@ export default function Skeleton () {
 		labels[bone] = label ?? ("bone_" + bone);
 		labelDictionary[labels[bone]] = bone;
 		parents[bone] = root;
-		bindTransforms[bone] = new Matrix4;
-		localTransforms[bone] = new Matrix4;
-		worldTransforms[bone] = new Matrix4;
-		offsetTransforms[bone] = new Matrix4;
+		bindTransforms[bone] = new DualQuaternion;
+		localTransforms[bone] = new DualQuaternion;
+		worldTransforms[bone] = new DualQuaternion;
+		offsetTransforms[bone] = new DualQuaternion;
 		keys[bone] = new Animation;
 		return bone;
 	}
@@ -123,6 +110,7 @@ export default function Skeleton () {
 
 	this.setLocalTransform = function (bone, mat) {
 		localTransforms[bone].copy(mat);
+		console.log(mat, localTransforms[bone])
 	}
 
 	this.addKey = function (bone, key) {
@@ -137,10 +125,10 @@ export default function Skeleton () {
 		this.foreachBone(bone => {
 			localTransforms[bone].copy(keys[bone].transformAt(t))
 		});
+		// localTransforms[bone]
 		// console.table(localTransforms[1])
 	}
 
-	// let computedWorldTransforms = false;
 	this.computeWorldTransforms = function (t = 0) {
 		this.computeLocalTransforms(t);
 
@@ -199,7 +187,9 @@ export function SkeletonRenderer (skeleton) {
 		skeleton.computeWorldTransforms(t);
 		skeleton.foreachBone(bone => {
 			const mat = skeleton.getWorldTransform(bone);
-			positions[bone].set(0,0,0).applyMatrix4(mat);
+			// positions[bone].set(0,0,0).applyMatrix4(mat);
+			
+			positions[bone].copy(mat.transform(new THREE.Vector3));
 		});
 	}
 
