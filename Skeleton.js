@@ -123,7 +123,7 @@ export default function Skeleton () {
 
 	this.computeLocalTransforms = function (t = 0) {
 		this.foreachBone(bone => {
-			localTransforms[bone].copy(keys[bone].transformAt(t))
+			localTransforms[bone].copy(keys[bone].transformAt(t));
 		});
 		// localTransforms[bone]
 		// console.table(localTransforms[1])
@@ -147,24 +147,24 @@ export default function Skeleton () {
 	}
 
 	this.setBindTransforms = function () {
-		if(!computedWorldTransforms) {
-			this.computeWorldTransforms(0);
-			computedWorldTransforms = true;
-		}
+		// if(!computedWorldTransforms) {
+		// 	this.computeWorldTransforms(0);
+		// 	computedWorldTransforms = true;
+		// }
 
-		this.foreachBone(bone => {
-			const worldM = worldTransforms[bone];
-			bindTransforms[bone].copy(worldM);
-			bindTransforms[bone].invert();
-		});
+		// this.foreachBone(bone => {
+		// 	const worldM = worldTransforms[bone];
+		// 	bindTransforms[bone].copy(worldM);
+		// 	bindTransforms[bone].invert();
+		// });
 	}
 
 	this.computeOffsets = function () {
-		this.foreachBone(bone => {
-			const bindM = bindTransforms[bone];
-			const worldM = worldTransforms[bone];
-			offsetTransforms[bone].multiplyMatrices(worldM, bindM);
-		});
+		// this.foreachBone(bone => {
+		// 	const bindM = bindTransforms[bone];
+		// 	const worldM = worldTransforms[bone];
+		// 	offsetTransforms[bone].multiplyMatrices(worldM, bindM);
+		// });
 	}
 
 	this.getOffset = function (bone) {

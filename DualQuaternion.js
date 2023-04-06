@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from './CMapJS/Libs/three.module.js';
+import { Quaternion, Vector3, Matrix4 } from './CMapJS/Libs/three.module.js';
 
 /// Advanced Methods in Computer Graphics, R. Mukudan, ISBN 978-1-4471-2339-2
 /// https://cs.gmu.edu/~jmlien/teaching/cs451/uploads/Main/dual-quaternion.pdf
@@ -76,7 +76,7 @@ class DualQuaternion {
 	conjugate() {
 
 		this.real.conjugate();
-		this.dual.conjugate();
+		this.dual.conjugate().multiplyScalar(-1);
 
 		return this;
 
@@ -183,10 +183,10 @@ class DualQuaternion {
 
 	multiplyDualQuaternions( dq0, dq1 ) {
 
-		const tempReal = dq0.real.clone().multiply( dq1.real );
+		const tempReal = dq1.real.clone().multiply( dq0.real );
 
-		const tempDual = dq0.dual.clone().multiply( dq1.real );
-		tempDual.add( dq0.real.clone().multiply( dq1.dual ));
+		const tempDual = dq1.dual.clone().multiply( dq0.real );
+		tempDual.add( dq1.real.clone().multiply( dq0.dual ));
 
 		this.real.copy(tempReal);
 		this.dual.copy(tempDual);
@@ -224,18 +224,20 @@ class DualQuaternion {
 	}
 
 	transform( p ) {
-		const norm = this.length();
-		const qr = this.real.clone().multiplyScalar( 1 / norm );
-	
-		const trans = this.getTranslation();
 
-		const transP = p.clone();
-		transP.applyQuaternion(qr);
-		transP.add(trans);
+		const dqp = DualQuaternion.setFromTranslation(p);
+		const copy = this.clone();
+		const copyc = this.clone().conjugate();
+		
+		copy.multiply(dqp).multiply(copyc)
 
-		return transP;
+		return copy.dual.vector();
 		
 	}
+
+	// transform( p ) {
+
+	// }
 
 	// _onChange( callback ) {
 

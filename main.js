@@ -43,46 +43,6 @@ const s2 = new THREE.Mesh(geometry, material1)
 const s3 = new THREE.Mesh(geometry, material2)
 s1.position.set(0, 0, 0)
 
-
-
-// const trans = new THREE.Vector3(1,2,3);
-// const rot = new THREE.Quaternion(0, 0, 0, 1);
-// const point = new THREE.Vector3(1,2,3);
-
-// const rot = new THREE.Quaternion(0, 0, 0, 1);
-// const trans = new THREE.Vector3(0,0.5, 0);
-// const axis = new THREE.Vector3(1, 0, 0);
-// // const angle = Math.PI/2;
-// const angle = 0;
-
-// const realPart = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-// // const dualPart = new THREE.Quaternion().copy(rot).multiply(new THREE.Quaternion(0, trans.x, trans.y, trans.z));
-// // // const tempQ = dualPart.clone().multiply(realPart.clone().conjugate()).multiplyScalar(0.5)
-// // // dualPart.multiply(realPart.clone().conjugate())
-// // // dualPart.x *= 0.5; dualPart.y *= 0.5; dualPart.z *= 0.5; dualPart.w *= 0.5;
-// // // const dualQuaternion = new THREE.Quaternion().copy(realPart).add(dualPart);
-// // const dualQuaternion = realPart.clone();
-// // dualQuaternion.x += dualPart.x;
-// // dualQuaternion.y += dualPart.y;
-// // dualQuaternion.z += dualPart.z;
-// // dualQuaternion.w += dualPart.w;
-
-// const point = new THREE.Vector3();
-// // point.applyQuaternion(dualQuaternion);
-// console.log(point)
-// console.log(realPart)
-// const dqq = DualQuaternion.fromRotTrans(realPart, trans);
-// console.log(dqq);
-// console.log(dqq.transform(point))
-// // const dq = new DualQuaternion(new THREE.Quaternion(0,0,0,1), new THREE.Quaternion(0, 0, 1, 0));
-// // dq.normalize()
-// // console.log(dq)
-
-// s1.position.copy(dqq.transform(point))
-// console.log(s1.position.length(), trans.length())
-// const testP = dq.transform(trans);
-// console.log(testP)
-
 scene.add(cone)
 scene.add(s0)
 scene.add(s1)
@@ -366,7 +326,7 @@ const bone1 = skeleton.newBone();
 skeleton.setParent(bone1, bone0);
 skeleton.addKey(bone1, key0);
 skeleton.addKey(bone1, key1);
-skeleton.addKey(bone1, key2);
+// skeleton.addKey(bone1, key2);
 // skeleton.setLocalTransform(bone1, transform.clone());
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
@@ -425,8 +385,8 @@ function update (t)
 
 
 const rot = new THREE.Quaternion(0, 0, 0, 1);
-const trans = new THREE.Vector3(0, 0.5, 0);
-const trans1 = new THREE.Vector3(0, -0.5, 0);
+const trans = new THREE.Vector3(0.5, 0.5, 0);
+const trans1 = new THREE.Vector3(0., 1, 0);
 const axis = new THREE.Vector3(0, 1, 0);
 const axis2 = new THREE.Vector3(1, 0, 0);
 // const angle = Math.PI/2;
@@ -442,15 +402,15 @@ const dqq = DualQuaternion.setFromRotationTranslation(realPart, trans);
 const dq0 = DualQuaternion.setFromRotationTranslation(realPart2, trans1);
 dq0.normalize()
 dqq.normalize()
-let dq2 = dq0.clone().multiply(dq0);
-let dq1 = dq0.clone().multiply(dqq);
+let dq1 = dq0.clone().multiply(dq0);
+let dq2 = dqq.clone().multiply(dq0);
 dq1.normalize()
 dq2.normalize()
 // let dq3 = dqq.clone().invert();
 // let dq3 = new DualQuaternion().lerpDualQuaternions(dqq, dq0, 0.5).normalize();
-let dq3 = dqq.clone().lerpShortest(dq2, Math.sin(t/200)*0.5+0.5).normalize();
+let dq3 = dqq.clone().lerpShortest(dq2, Math.sin(t/500)*0.5+0.5).normalize();
 // console.log(dq3)
-
+let dq4 = dqq.clone().add(dq0).normalize()
 // console.log(dqq);
 // console.log(dqq.transform(point))
 	cone.position.copy(point)
