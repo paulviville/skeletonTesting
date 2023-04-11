@@ -94,6 +94,15 @@ class DualQuaternion {
 
 	}
 
+	fromArray( array, offset = 0 ) {
+
+		this.real.fromArray( array, offset );
+		this.dual.fromArray( array, offset + 4 );
+
+		return this;
+
+	}
+
 	getRotation() {
 
 		return this.real.clone();
@@ -223,21 +232,27 @@ class DualQuaternion {
 
 	}
 
+	toArray( array = [], offset = 0 ) {
+
+		this.real.toArray( array , offset );
+		this.dual.toArray( array , offset + 4 );
+
+		return array;
+
+	}
+
 	transform( p ) {
 
 		const dqp = DualQuaternion.setFromTranslation(p);
 		const copy = this.clone();
 		const copyc = this.clone().conjugate();
 		
-		copy.multiply(dqp).multiply(copyc)
+		copy.multiply(dqp).multiply(copyc);
 
 		return copy.dual.vector();
 		
 	}
 
-	// transform( p ) {
-
-	// }
 
 	// _onChange( callback ) {
 
@@ -250,4 +265,4 @@ class DualQuaternion {
 	// _onChangeCallback() {}
 }
 
-export {DualQuaternion}
+export { DualQuaternion }
