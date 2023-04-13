@@ -193,30 +193,55 @@ function normalize4Locked(v0) {
 	return v0;
 }
 
+function unit4Locked(v0) {
+	const remains = 1 - v0.w;
+	if(remains == 0)
+		return v0;
+
+	const sum = v0.x + v0.y + v0.z;
+	if(sum == 0) {
+		v0.x = remains / 3;
+		v0.y = remains / 3;
+		v0.z = remains / 3;
+		return v0;
+	}
+
+	const ratio = sum / remains;
+	v0.x /= ratio;
+	v0.y /= ratio;
+	v0.z /= ratio;
+	return v0;
+}
+
+window.testUnit = function() {
+	const v0 = new THREE.Vector4(0., 0., 0.2, 0.5);
+	unit4Locked(v0)
+}
+
 function normalizeRedLocked(red) {
 	const v = new THREE.Vector4(blendWeights.y, blendWeights.z, blendWeights.w, red);
-	normalize4Locked(v);
+	unit4Locked(v);
 	blendWeights.set(red, v.x, v.y, v.z);
 	blend();
 }
 
 function normalizeGreenLocked(green) {
     const v = new THREE.Vector4(blendWeights.x, blendWeights.z, blendWeights.w, green);    
-	normalize4Locked(v);
+	unit4Locked(v);
 	blendWeights.set(v.x, green, v.y, v.z);
 	blend();
 }
 
 function normalizeBlueLocked(blue) {
     const v = new THREE.Vector4(blendWeights.x, blendWeights.y, blendWeights.w, blue);    
-	normalize4Locked(v);
+	unit4Locked(v);
 	blendWeights.set(v.x, v.y, blue, v.z);
 	blend();
 }
 
 function normalizeBlackLocked(black) {
     const v = new THREE.Vector4(blendWeights.x, blendWeights.y, blendWeights.z, black);    
-	normalize4Locked(v);
+	unit4Locked(v);
 	blendWeights.set(v.x, v.y, v.z, black);
 	blend();
 }
@@ -325,10 +350,10 @@ function updateAll() {
 const gui = new DAT.GUI();
 const folderWeights = gui.addFolder("weights");
 folderWeights.open();
-folderWeights.add(blendWeights, 'x').name('red').step(0.0001).min(0).max(1).listen().onChange(normalizeRedLocked);
-folderWeights.add(blendWeights, 'y').name('green').step(0.0001).min(0).max(1).listen().onChange(normalizeGreenLocked);
-folderWeights.add(blendWeights, 'z').name('blue').step(0.0001).min(0).max(1).listen().onChange(normalizeBlueLocked);
-folderWeights.add(blendWeights, 'w').name('black').step(0.0001).min(0).max(1).listen().onChange(normalizeBlackLocked);
+folderWeights.add(blendWeights, 'x').name('red').step(0.001).min(0).max(1).listen().onChange(normalizeRedLocked);
+folderWeights.add(blendWeights, 'y').name('green').step(0.001).min(0).max(1).listen().onChange(normalizeGreenLocked);
+folderWeights.add(blendWeights, 'z').name('blue').step(0.001).min(0).max(1).listen().onChange(normalizeBlueLocked);
+folderWeights.add(blendWeights, 'w').name('black').step(0.001).min(0).max(1).listen().onChange(normalizeBlackLocked);
 const folderQuat = gui.addFolder("Quat");
 folderQuat.open();
 const folderQuatR = folderQuat.addFolder("real");
