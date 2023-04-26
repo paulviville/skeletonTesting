@@ -2,16 +2,16 @@ import AttributesContainer from './CMapJS/CMap/AttributeContainer.js';
 import Graph from './CMapJS/CMap/Graph.js';
 import { Matrix4, Vector3 } from './CMapJS/Libs/three.module.js';
 import * as THREE from './CMapJS/Libs/three.module.js';
-import {DualQuaternion} from './DualQuaternion.js';
+// import {DualQuaternion} from './DualQuaternion.js';
 
 const root = null;
 
-export function Key (t, mat) {
+export function KeyLBS (t, mat) {
 	this.t = t;
 	this.mat = mat;
 }
 
-function Animation () {
+function AnimationLBS () {
 	this.keys = [];
 
 	this.addKey = function (key) {
@@ -26,7 +26,7 @@ function Animation () {
 	}
 
 	this.transformAt = function (t) {
-		const transform = new DualQuaternion;
+		const transform = new Matrix4;
 		if(this.keys.length == 0)
 			return transform;
 			
@@ -42,20 +42,34 @@ function Animation () {
 		else { /// between two keys -> interpolation
 			const ratio = (t - this.keys[it - 1].t)/(this.keys[it].t - this.keys[it - 1].t);
 
-			const trans0 = new DualQuaternion;
-			const trans1 = new DualQuaternion;
+			const mat = new Matrix4;
+			const trans0 = new Matrix4;
+			const trans1 = new Matrix4;
 
 			trans0.copy(this.keys[it - 1].mat);
 			trans1.copy(this.keys[it].mat);
 
-			transform.lerpDualQuaternions(trans1, trans0, ratio);
-			transform.normalize();
+			const q0 = new THREE.Quaternion;
+			const q1 = new THREE.Quaternion;
+
+			/// FIX only rotation for now cuz bone length often constant
+			/// TODO separate rotation & translation for more efficient compute
+			q0.setFromRotationMatrix(mat.extractRotation(trans0));
+			mat.invert();
+			trans0.multiplyMatrices(mat, trans0)
+
+			q1.setFromRotationMatrix(mat.extractRotation(trans1));
+			q0.slerp(q1, ratio);
+			mat.makeRotationFromQuaternion(q0);
+
+			trans0.multiplyMatrices(mat, trans0)
+			transform.copy(trans0);
 		}
 		return transform; 
 	}
 }
 
-export default function Skeleton () {
+export default function SkeletonLBS () {
 	const attributes = new AttributesContainer;
 	const bones = attributes.createAttribute("bones");
 	const labels = attributes.createAttribute("labels");
@@ -84,11 +98,11 @@ export default function Skeleton () {
 		labels[bone] = label ?? ("bone_" + bone);
 		labelDictionary[labels[bone]] = bone;
 		parents[bone] = root;
-		bindTransforms[bone] = new DualQuaternion;
-		localTransforms[bone] = new DualQuaternion;
-		worldTransforms[bone] = new DualQuaternion;
-		offsetTransforms[bone] = new DualQuaternion;
-		keys[bone] = new Animation;
+		bindTransforms[bone] = new Matrix4;
+		localTransforms[bone] = new Matrix4;
+		worldTransforms[bone] = new Matrix4;
+		offsetTransforms[bone] = new Matrix4;
+		keys[bone] = new AnimationLBS;
 		return bone;
 	}
 
@@ -180,7 +194,7 @@ export default function Skeleton () {
 }
 
 
-export function SkeletonRenderer (skeleton) {
+export function SkeletonRendererLBS (skeleton) {
 	const positions = skeleton.newBoneAttribute("position");
 	skeleton.foreachBone(bone => {
 		positions[bone] = new THREE.Vector3;
@@ -190,9 +204,9 @@ export function SkeletonRenderer (skeleton) {
 		skeleton.computeWorldTransforms(t);
 		skeleton.foreachBone(bone => {
 			const mat = skeleton.getWorldTransform(bone);
-			// positions[bone].set(0,0,0).applyMatrix4(mat);
+			positions[bone].set(0,0,0).applyMatrix4(mat);
 			
-			positions[bone].copy(mat.transform(new THREE.Vector3));
+			// positions[bone].copy(mat.transform(new THREE.Vector3));
 		});
 	}
 
@@ -214,7 +228,7 @@ export function SkeletonRenderer (skeleton) {
 			matrix.scale(scale);
 			this.vertices.bones[id] = bone;
 			this.vertices.instanceId[bone] = id;
-			this.vertices.setColorAt(id, new THREE.Color(0xBB1111));
+			this.vertices.setColorAt(id, new THREE.Color(0x11BB11));
 			this.vertices.setMatrixAt(id, matrix);
 			++id;
 		});
@@ -270,7 +284,7 @@ export function SkeletonRenderer (skeleton) {
 				matrix.compose(pos, quat, scale);
 
 				this.edges.setMatrixAt(id, matrix);
-				this.edges.setColorAt(id, new THREE.Color(0x997777));
+				this.edges.setColorAt(id, new THREE.Color(0x779977));
 				this.edges.instanceId[bone] = id;
 				this.edges.bones[id] = bone;
 				++id;
