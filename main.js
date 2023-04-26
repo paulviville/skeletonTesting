@@ -12,7 +12,7 @@ import {DualQuaternion} from './DualQuaternion.js';
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.001, 1000.0);
-camera.position.set(0, 0, 3);
+camera.position.set(0, 0.5, 1.5);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
@@ -67,12 +67,12 @@ rotation1.invert()
 let mR1 = new THREE.Matrix4().makeRotationFromQuaternion(rotation1);
 const keyLBS1 = new KeyLBS(100, mR1.clone().multiply(mT));
 
-const translationroot = new THREE.Quaternion(0, 0, -0.25, 0);
+const translationroot = new THREE.Quaternion(-0.25, 0, 0, 0);
 const transformRoot = DualQuaternion.setFromRotationTranslation(new THREE.Quaternion, translationroot)
 const keyroot = new Key(100, transformRoot);
 
 
-const translationLBSroot = new THREE.Vector3(0, 0, 0.25);
+const translationLBSroot = new THREE.Vector3(0.25, 0, 0);
 let mTroot = new THREE.Matrix4().makeTranslation(translationLBSroot.x, translationLBSroot.y, translationLBSroot.z);
 const keyLBSroot = new KeyLBS(100, mTroot);
 
