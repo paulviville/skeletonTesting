@@ -180,7 +180,7 @@ export default function SkeletonLBS () {
 		this.foreachBone(bone => {
 			const bindM = bindTransforms[bone];
 			const worldM = worldTransforms[bone];
-			offsetTransforms[bone].multiplyDualQuaternions(worldM, bindM).normalize();
+			offsetTransforms[bone].multiplyMatrices(worldM, bindM);
 		});
 	}
 
@@ -205,8 +205,6 @@ export function SkeletonRendererLBS (skeleton) {
 		skeleton.foreachBone(bone => {
 			const mat = skeleton.getWorldTransform(bone);
 			positions[bone].set(0,0,0).applyMatrix4(mat);
-			
-			// positions[bone].copy(mat.transform(new THREE.Vector3));
 		});
 	}
 

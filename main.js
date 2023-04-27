@@ -83,11 +83,11 @@ skeletonLBS.addKey(rootLBS, keyLBSroot);
 const boneLBS0 = skeletonLBS.newBone();
 skeletonLBS.setParent(boneLBS0, rootLBS);
 skeletonLBS.addKey(boneLBS0, keyLBS0);
-skeletonLBS.addKey(boneLBS0, keyLBS1);
+// skeletonLBS.addKey(boneLBS0, keyLBS1);
 const boneLBS1 = skeletonLBS.newBone();
 skeletonLBS.setParent(boneLBS1, boneLBS0);
 skeletonLBS.addKey(boneLBS1, keyLBS0);
-skeletonLBS.addKey(boneLBS1, keyLBS1);
+// skeletonLBS.addKey(boneLBS1, keyLBS1);
 const boneLBS2 = skeletonLBS.newBone();
 skeletonLBS.setParent(boneLBS2, boneLBS1);
 skeletonLBS.addKey(boneLBS2, keyLBS0);
@@ -95,7 +95,12 @@ skeletonLBS.addKey(boneLBS2, keyLBS1);
 const boneLBS3 = skeletonLBS.newBone();
 skeletonLBS.setParent(boneLBS3, boneLBS2);
 skeletonLBS.addKey(boneLBS3, keyLBS0);
+// skeletonLBS.addKey(boneLBS3, keyLBS1);
+
+skeletonLBS.addKey(boneLBS0, keyLBS1);
+skeletonLBS.addKey(boneLBS1, keyLBS1);
 skeletonLBS.addKey(boneLBS3, keyLBS1);
+
 
 const skeleton = new Skeleton;
 const root = skeleton.newBone("root");
@@ -103,11 +108,11 @@ skeleton.addKey(root, keyroot);
 const bone0 = skeleton.newBone();
 skeleton.setParent(bone0, root);
 skeleton.addKey(bone0, key0);
-skeleton.addKey(bone0, key1);
+// skeleton.addKey(bone0, key1);
 const bone1 = skeleton.newBone();
 skeleton.setParent(bone1, bone0);
 skeleton.addKey(bone1, key0);
-skeleton.addKey(bone1, key1);
+// skeleton.addKey(bone1, key1);
 const bone2 = skeleton.newBone();
 skeleton.setParent(bone2, bone1);
 skeleton.addKey(bone2, key0);
@@ -115,7 +120,12 @@ skeleton.addKey(bone2, key1);
 const bone3 = skeleton.newBone();
 skeleton.setParent(bone3, bone2);
 skeleton.addKey(bone3, key0);
+// skeleton.addKey(bone3, key1);
+
+skeleton.addKey(bone0, key1);
+skeleton.addKey(bone1, key1);
 skeleton.addKey(bone3, key1);
+
 
 skeleton.setBindTransforms();
 skeleton.computeWorldTransforms(0);
@@ -220,7 +230,10 @@ skinLBSRenderer.edges.addTo(scene)
 // const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshLambertMaterial);
 // scene.add(sphere)
 const grid = new THREE.GridHelper(1, 10)
+const grid2 = new THREE.GridHelper(1, 10)
+grid2.lookAt(worldY)
 scene.add(grid)
+scene.add(grid2)
 window.checkLocals = function() 
 {
 	skeleton.foreachBone(b => {
@@ -245,10 +258,12 @@ function update (t)
 {
 	let s = 100 * (Math.sin(t / 1000) / 2 + 0.5);
 	sRenderer.computePositions(s);
+	skeleton.computeOffsets()
 	sRenderer.updateVertices();
 	sRenderer.updateEdges();
 
 	sRendererLBS.computePositions(s);
+	skeletonLBS.computeOffsets()
 	sRendererLBS.updateVertices();
 	sRendererLBS.updateEdges();
 
@@ -259,13 +274,10 @@ function update (t)
 		let dqBlend = new DualQuaternion(new THREE.Quaternion(0,0,0,0), new THREE.Quaternion(0,0,0,0));
 		for(let w = 0; w < skinWeights[v].length; ++w) {
 			let b = skinWeights[v][w];
-			let bw = skeleton.getWorldTransform(b.b).clone();
-			bw.multiply(skeleton.getBindTransform(b.b));
-			dqBlend.addScaledDualQuaternion(bw, b.w);
+			let off = skeleton.getOffset(b.b);
+			dqBlend.addScaledDualQuaternion(off, b.w);
 		}
-		// console.log(v, dqBlend, )
 		dqBlend.normalize();
-		// skinPos[v].copy(dqId.transform(skinBind[v].clone()));
 		let pdq = DualQuaternion.setFromTranslation(pb);
 		pdq.multiplyDualQuaternions(dqBlend, pdq)
 
@@ -280,9 +292,8 @@ function update (t)
 		let pb = skinLBSBind[v].clone();
 		for(let w = 0; w < skinLBSWeights[v].length; ++w) {
 			let b = skinLBSWeights[v][w];
-			let bw = skeletonLBS.getWorldTransform(b.b).clone();
-			bw.multiply(skeletonLBS.getBindTransform(b.b));
-			p0.addScaledVector(pb.clone().applyMatrix4(bw), b.w);
+			let off = skeletonLBS.getOffset(b.b);
+			p0.addScaledVector(pb.clone().applyMatrix4(off), b.w);
 		}
 		skinLBSPos[v].copy(p0);
 	})
