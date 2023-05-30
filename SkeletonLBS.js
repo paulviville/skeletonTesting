@@ -51,15 +51,22 @@ function AnimationLBS () {
 
 			const q0 = new THREE.Quaternion;
 			const q1 = new THREE.Quaternion;
+			const t0 = new THREE.Vector3;
+			const t1 = new THREE.Vector3;
 
-			/// FIX only rotation for now cuz bone length often constant
-			/// TODO separate rotation & translation for more efficient compute
 			q0.setFromRotationMatrix(mat.extractRotation(trans0));
 			mat.invert();
 			trans0.multiplyMatrices(mat, trans0)
+			t0.applyMatrix4(trans0);
 
 			q1.setFromRotationMatrix(mat.extractRotation(trans1));
+			mat.invert();
+			trans1.multiplyMatrices(mat, trans1)
+			t1.applyMatrix4(trans1);
+
+			t0.lerp(t1, ratio);
 			q0.slerp(q1, ratio);
+			trans0.makeTranslation(t0.x, t0.y, t0.z);
 			mat.makeRotationFromQuaternion(q0);
 
 			trans0.multiplyMatrices(mat, trans0)

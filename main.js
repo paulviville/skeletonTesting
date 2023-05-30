@@ -37,35 +37,34 @@ window.addEventListener('resize', function() {
 
 
 
-
-// let skel = new Skeleton()
-
 const worldUp = new THREE.Vector3(0, 0, 1);
 const worldY = new THREE.Vector3(0, 1, 0);
 
-///DQ rotation error
 
 const translation = new THREE.Quaternion(0, 0.1, 0, 0);
+const translation1 = new THREE.Quaternion(0, 0.15, 0, 0);
 const translationLBS = new THREE.Vector3(0, 0.1, 0);
+const translation1LBS = new THREE.Vector3(0, 0.15, 0);
 
-const rotation = new THREE.Quaternion().setFromAxisAngle(worldY, Math.PI / 2);
+const rotation = new THREE.Quaternion().setFromAxisAngle(worldY, Math.PI / 3);
 const transform = DualQuaternion.setFromRotationTranslation(rotation.clone(), translation.clone());
 transform.normalize();
 const key0 = new Key(0, transform);
 
-let mR = new THREE.Matrix4().makeRotationFromQuaternion(rotation.invert());
+let mR = new THREE.Matrix4().makeRotationFromQuaternion(rotation);
 let mT = new THREE.Matrix4().makeTranslation(translationLBS.x, translationLBS.y, translationLBS.z);
 const keyLBS0 = new KeyLBS(0, mR.clone().multiply(mT));
 
-const rotation1 = new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 6);
+const rotation1 = new THREE.Quaternion().setFromAxisAngle(worldUp, Math.PI / 3);
 // const rotation1 = new THREE.Quaternion().setFromAxisAngle(worldUp, 0);
-const transform1 = DualQuaternion.setFromRotationTranslation(rotation1.clone(), translation.clone());
+const transform1 = DualQuaternion.setFromRotationTranslation(rotation1.clone(), translation1.clone());
 transform1.normalize();
 const key1 = new Key(100, transform1);
 
-rotation1.invert()
+rotation1
 let mR1 = new THREE.Matrix4().makeRotationFromQuaternion(rotation1);
-const keyLBS1 = new KeyLBS(100, mR1.clone().multiply(mT));
+let mT1 = new THREE.Matrix4().makeTranslation(translation1LBS.x, translation1LBS.y, translation1LBS.z);
+const keyLBS1 = new KeyLBS(100, mR1.clone().multiply(mT1));
 
 const translationroot = new THREE.Quaternion(-0.25, 0, 0, 0);
 const transformRoot = DualQuaternion.setFromRotationTranslation(new THREE.Quaternion, translationroot)
@@ -227,8 +226,7 @@ skinLBSRenderer.vertices.addTo(scene)
 skinLBSRenderer.edges.create({color: new THREE.Color(0x005500)});
 skinLBSRenderer.edges.addTo(scene)
 
-// const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshLambertMaterial);
-// scene.add(sphere)
+
 const grid = new THREE.GridHelper(1, 10)
 const grid2 = new THREE.GridHelper(1, 10)
 grid2.lookAt(worldY)

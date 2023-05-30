@@ -23,12 +23,12 @@ class DualQuaternion {
 	}
 
 	static setFromRotationTranslation( q, t ) {
-		const w = -0.5 * ( t.x * q.x + t.y * q.y + t.z * q.z );
-        const x =  0.5 * ( t.x * q.w + t.y * q.z - t.z * q.y );
-        const y =  0.5 * (-t.x * q.z + t.y * q.w + t.z * q.x );
-        const z =  0.5 * ( t.x * q.y - t.y * q.x + t.z * q.w );
 
-		return new DualQuaternion( q , new Quaternion( x, y, z, w ) ).normalize();
+		const qt = new Quaternion(t.x, t.y, t.z, 0);
+
+		qt.premultiply(q).multiplyScalar(0.5);
+
+		return new DualQuaternion( q , qt ).normalize();
 	}
 
 	static setFromTranslation( t ) {
@@ -192,10 +192,10 @@ class DualQuaternion {
 
 	multiplyDualQuaternions( dq0, dq1 ) {
 
-		const tempReal = dq1.real.clone().multiply( dq0.real );
+		const tempReal = dq0.real.clone().multiply( dq1.real );
 
-		const tempDual = dq1.dual.clone().multiply( dq0.real );
-		tempDual.add( dq1.real.clone().multiply( dq0.dual ));
+		const tempDual = dq0.dual.clone().multiply( dq1.real );
+		tempDual.add( dq0.real.clone().multiply( dq1.dual ));
 
 		this.real.copy(tempReal);
 		this.dual.copy(tempDual);
@@ -232,6 +232,14 @@ class DualQuaternion {
 
 	}
 
+	premultiply( dq ) {
+
+		this.multiplyDualQuaternions( dq, this );
+
+		return this;
+
+	}
+
 	toArray( array = [], offset = 0 ) {
 
 		this.real.toArray( array , offset );
@@ -243,7 +251,7 @@ class DualQuaternion {
 
 	transform( p ) {
 
-		const dqp = DualQuaternion.setFromTranslation(p);
+		const dqp = new DualQuaternion(new Quaternion, new Quaternion(p.x, p.y, p.z, 0));
 		const copy = this.clone();
 		const copyc = this.clone().conjugate();
 		
