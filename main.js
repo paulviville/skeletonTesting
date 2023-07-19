@@ -7,6 +7,7 @@ import { OrbitControls } from './CMapJS/Libs/OrbitsControls.js';
 import Skeleton, {Key, SkeletonRenderer } from './Skeleton.js';
 import {DualQuaternion} from './DualQuaternion.js';
 import CMap3 from './CMapJS/CMap/CMap3.js'
+import { cutAllEdges, quadrangulateAllFaces } from './CMapJS/Utils/Subdivision.js';
 
 
 const scene = new THREE.Scene();
@@ -270,6 +271,68 @@ console.log(hexMesh.nbCells(hexMesh.volume))
 console.log(hexMesh.nbCells(hexMesh.edge))
 
 
+function subdivideHexMesh(){
+	const vertex = hexMesh.vertex;
+
+	const volumeCache = hexMesh.cache(hexMesh.volume);
+
+	quadrangulateAllFaces(hexMesh, 
+		vd => {
+			const vid = hexMesh.cell(vertex, vd);
+			const vid0 = hexMesh.cell(vertex, hexMesh.phi2[vd]);
+			const vid1 = hexMesh.cell(vertex, hexMesh.phi_1[vd]);
+			hexPos[vid] = hexPos[vid0].clone();
+			hexPos[vid].add(hexPos[vid1]);
+			hexPos[vid].multiplyScalar(0.5);
+			hexBind[vid] = hexPos[vid].clone();
+
+			const weights = [];
+			hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			const weight = [];
+			weights.forEach((w, b) => {
+				w /= 2;
+				weight.push({b, w});
+			})
+	
+			hexWeight[vid] = weight
+		},
+		vd => {
+			const vid = hexMesh.cell(vertex, vd);
+			const vid0 = hexMesh.cell(vertex, hexMesh.phi1[vd])
+			const vid1 = hexMesh.cell(vertex, hexMesh.phi_1[vd])
+			const vid2 = hexMesh.cell(vertex, hexMesh.phi([2, 1, 2], vd))
+			const vid3 = hexMesh.cell(vertex, hexMesh.phi([-1, 2, -1], vd))
+
+			hexPos[vid] = hexPos[vid0].clone();
+			hexPos[vid].add(hexPos[vid1]);
+			hexPos[vid].add(hexPos[vid2]);
+			hexPos[vid].add(hexPos[vid3]);
+			hexPos[vid].multiplyScalar(0.25);
+			hexBind[vid] = hexPos[vid].clone()
+
+			const weights = [];
+			hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid2].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid3].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			const weight = [];
+			weights.forEach((w, b) => {
+				w /= 4;
+				weight.push({b, w});
+			})
+			hexWeight[vid] = weight
+
+		});
+
+	
+}
+
+hexMesh.foreach(hexMesh.volume, wd => {
+	console.log(hexMesh.isBoundary(wd))
+})
+
+subdivideHexMesh()
 
 const hexRenderer = new Renderer(hexMesh);
 hexRenderer.vertices.create();
@@ -336,6 +399,8 @@ function update (t)
 		hexPos[vid].copy(pdq.transform(new THREE.Vector3))
 	});
 
+	hexRenderer.vertices.update()
+	hexRenderer.edges.update()
 	hexRenderer.volumes.update()
 	hexRenderer.volumes.rescale(0.9)
 }
