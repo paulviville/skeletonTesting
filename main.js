@@ -510,20 +510,82 @@ function subdivideHexMesh(hexMesh, hexPos){
 	const volumeVertCache = volumeCache.map(wd => {
 		return hexMesh.phi(path12_1, wd)
 	})
+	
+	const path12 = [1, 2];
+	const path_12 = [-1, 2];
+	const path_1232_12 = [-1, 2, 3, 2, -1, 2];
 	hexMesh.foreach(volume, wd => {
 		console.log(wd)
 		// console.log(hexMesh.phi(path12_1, wd))
 		// hexMesh.foreachDartOf(vertex, hexMesh.phi(path12_1, wd), d => {
 		// 	console.log(d)	
 		// })
+		let wd0 = wd;
+		let wd1 = hexMesh.phi(path23, wd0);
+		let wd2 = hexMesh.phi(path23, wd1);
+		let wd3 = hexMesh.phi(path23, wd2);
+		let wd4 = hexMesh.phi(path_1232_12, wd);
+		let wd5 = hexMesh.phi(path23, wd4);
+		let wd6 = hexMesh.phi(path23, wd5);
+		let wd7 = hexMesh.phi(path23, wd6);
+
+		const wds = [wd0, wd1, wd2, wd3, wd4, wd5, wd6, wd7]
+		const wids = [hexMesh.cell(volume, hexMesh.phi(path12, wd0)), hexMesh.newCell(volume), hexMesh.newCell(volume),
+			hexMesh.newCell(volume), hexMesh.newCell(volume), hexMesh.newCell(volume), 
+			hexMesh.newCell(volume), hexMesh.newCell(volume)]
+		
+		for(let i = 0; i < 8; ++i) {
+			hexMesh.foreachDartOf(volume, wds[i], d => {
+				hexMesh.setEmbedding(volume, d, wids[i])
+			})
+		}
+
+		let vid0 = hexMesh.newCell(vertex); 
+		hexMesh.foreachDartOf(vertex, wd, d => {
+			hexMesh.setEmbedding(vertex, d, vid0)
+			let d1 = hexMesh.phi2[d];
+			let vid1 = hexMesh.setEmbedding(vertex, d1, hexMesh.cell(vertex, hexMesh.phi(path_12, d1)))
+			let d2 = hexMesh.phi1[d];
+			hexMesh.setEmbedding(vertex, d2, vid1)
+			let d3 = hexMesh.phi_1[d1]
+			hexMesh.setEmbedding(vertex, d3, hexMesh.cell(vertex, hexMesh.phi(path21, d3)))
+		});
+
+		// hexMesh.foreachDartOf(vertex, wd, d => {
+		// 	let d1 = hexMesh.phi2[d];
+		// 	let d2 = hexMesh.phi1[d];
+		// 	let d3 = hexMesh.phi_1[d1]
+		// 	console.log(hexMesh.cell(vertex, d), hexMesh.cell(vertex, d1), hexMesh.cell(vertex, d2), hexMesh.cell(vertex, d3))
+		// });
+
+		hexPos[vid0] = new THREE.Vector3;
+		// hexMesh.foreachIncident(vertex, volume, wd, vd => {
+		// 	hexPos[vid0].add(hexPos[hexMesh.cell(vertex, vd)])
+		// 	console.log(vid0, hexMesh.cell(volume, vd), hexMesh.cell(vertex, vd))
+		// })
+		hexMesh.foreachAdjacent(edge, vertex, wd, vd => {
+						hexPos[vid0].add(hexPos[hexMesh.cell(vertex, vd)])
+			console.log(vid0, hexMesh.cell(volume, vd), hexMesh.cell(vertex, vd))
+		})
+
+		hexPos[vid0].multiplyScalar(1 / 6);
 	}, {cache: volumeVertCache})
+
+
+
+	console.log("embedded")
+	hexMesh.foreachDart(d=> {
+		console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi2:${hexMesh.phi2[d]}, \tphi_1:${hexMesh.phi_1[d]},\tphi3:${hexMesh.phi3[d]}, \tv:${hexMesh.cell(vertex, d)}, \tw:${hexMesh.cell(volume, d)}`)
+	});
 }
 
 subdivideHexMesh(hexMesh2, hexPos2)
 
 const hexRenderer2 = new RendererDarts(hexMesh2);
-// hexRenderer2.volumes.create({color: 0x7777BB}).rescale(0.9);
-// hexRenderer2.volumes.addTo(scene)
+hexRenderer2.volumes.create({color: 0x7777BB}).rescale(0.9);
+hexRenderer2.volumes.addTo(scene)
+hexRenderer2.vertices.create();
+hexRenderer2.vertices.addTo(scene)
 
 
 const hexRenderer = new Renderer(hexMesh);
