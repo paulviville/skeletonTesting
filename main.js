@@ -195,15 +195,15 @@ for(let i = 0; i < 4; ++i) {
 
 hexMesh.close();
 hexMesh.setEmbeddings(hexMesh.vertex);
-hexMesh.setEmbeddings(hexMesh.volume);
+// hexMesh.setEmbeddings(hexMesh.volume);
 
-hexMesh.foreach(hexMesh.volume, wd => {
-	console.log(hexMesh.cell(hexMesh.volume, wd))
-})
+// hexMesh.foreach(hexMesh.volume, wd => {
+// 	console.log(hexMesh.cell(hexMesh.volume, wd))
+// })
 
 const hexPos = hexMesh.addAttribute(hexMesh.vertex, "position");
 const hexBind = hexMesh.addAttribute(hexMesh.vertex, "bind");
-const hexWeight =  hexMesh.addAttribute(hexMesh.vertex, "position");
+const hexWeight =  hexMesh.addAttribute(hexMesh.vertex, "weight");
 
 d0 = dh0; d1 = dh1; d2 = dh2; d3 = dh3; d3_ = hexMesh.phi1[dh3_];
 hexPos[hexMesh.cell(hexMesh.vertex, d0)] = new THREE.Vector3(-0.05, 0, -0.05)
@@ -290,7 +290,7 @@ const hexPos2 = hexMesh2.addAttribute(hexMesh2.vertex, "position");
 let dh20 = hexMesh2.addPrism(4, false);
 hexMesh2.close();
 hexMesh2.setEmbeddings(hexMesh2.vertex);
-hexMesh2.setEmbeddings(hexMesh2.volume);
+// hexMesh2.setEmbeddings(hexMesh2.volume);
 
 
 
@@ -331,25 +331,20 @@ function subdivideHexMesh(hexMesh, hexPos){
 
 	const edgeVertCache = [];
 	const faceVertCache = [];
-	const volumeMarker = hexMesh.newMarker(volume);
-	const volumeCache = hexMesh.cache(hexMesh.volume, wd => {
+	// const volumeMarker = hexMesh.newMarker(volume);
+	const volumeCache = hexMesh.cache(volume, wd => {
 		return !hexMesh.isBoundary(wd);
 	});
 
-	hexMesh.foreachDart(d=> {
-		console.log(d, hexMesh.phi1[d], hexMesh.phi2[d], hexMesh.phi_1[d])
-	})
+	// hexMesh.foreach(volume, wd => {
+	// 	if(!hexMesh.isBoundary(wd))
+	// 		volumeMarker.mark(wd);
+	// });
 
-	hexMesh.foreach(volume, wd => {
-		if(!hexMesh.isBoundary(wd))
-			// console.log(`boundary ${wd}`)
-			volumeMarker.mark(wd);
-	});
-
-	console.log("precut")
-	hexMesh.foreachDart(d=> {
-		console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi_1:${hexMesh.phi2[d]}, \tphi2:${hexMesh.phi_1[d]}, \tw:${hexMesh.cell(volume, d)}`)
-	})
+	// console.log("precut")
+	// hexMesh.foreachDart(d=> {
+	// 	console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi_1:${hexMesh.phi2[d]}, \tphi2:${hexMesh.phi_1[d]}, \tw:${hexMesh.cell(volume, d)}`)
+	// })
 
 	quadrangulateAllFaces(hexMesh, 
 		vd => {
@@ -359,18 +354,19 @@ function subdivideHexMesh(hexMesh, hexPos){
 			hexPos[vid] = hexPos[vid0].clone();
 			hexPos[vid].add(hexPos[vid1]);
 			hexPos[vid].multiplyScalar(0.5);
-			// hexBind[vid] = hexPos[vid].clone();
 
-			// const weights = [];
-			// hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// const weight = [];
-			// weights.forEach((w, b) => {
-			// 	w /= 2;
-			// 	weight.push({b, w});
-			// })
+			hexBind[vid] = hexPos[vid].clone();
+
+			const weights = [];
+			hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			const weight = [];
+			weights.forEach((w, b) => {
+				w /= 2;
+				weight.push({b, w});
+			})
 	
-			// hexWeight[vid] = weight
+			hexWeight[vid] = weight
 
 			edgeVertCache.push(vd);
 		},
@@ -386,36 +382,29 @@ function subdivideHexMesh(hexMesh, hexPos){
 			hexPos[vid].add(hexPos[vid2]);
 			hexPos[vid].add(hexPos[vid3]);
 			hexPos[vid].multiplyScalar(0.25);
-			// hexBind[vid] = hexPos[vid].clone()
 
-			// const weights = [];
-			// hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// hexWeight[vid2].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// hexWeight[vid3].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
-			// const weight = [];
-			// weights.forEach((w, b) => {
-			// 	w /= 4;
-			// 	weight.push({b, w});
-			// })
-			// hexWeight[vid] = weight
+			hexBind[vid] = hexPos[vid].clone()
+
+			const weights = [];
+			hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid2].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			hexWeight[vid3].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+			const weight = [];
+			weights.forEach((w, b) => {
+				w /= 4;
+				weight.push({b, w});
+			})
+			hexWeight[vid] = weight
 
 			faceVertCache.push(hexMesh.isBoundary(vd) ? hexMesh.phi(path23, vd) : vd);
 			// faceVertCache.push(vd);
 	});
 
-	console.log("quadrangulated")
-	hexMesh.foreachDart(d=> {
-		console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi_1:${hexMesh.phi2[d]}, \tphi2:${hexMesh.phi_1[d]}, \tw:${hexMesh.cell(volume, d)}, \tm:${volumeMarker.marked(d)}, \tb:${hexMesh.isBoundary(d)}`)
-	});
-	console.table(edgeVertCache)
-	console.table(faceVertCache)
 	hexMesh.foreach(edge, ed => {
 		let d = ed;
-		console.log("edge", ed, hexMesh.isBoundary(ed))
 		do {
-			if(!hexMesh.isBoundary(d) && volumeMarker.marked(d)){
-				console.log("edge", ed, hexMesh.isBoundary(ed))
+			if(!hexMesh.isBoundary(d)){
 				let d01 = hexMesh.phi_1[d];
 				let d02 = hexMesh.phi2[d01];
 				let d21 = hexMesh.phi(path21, d);
@@ -447,18 +436,6 @@ function subdivideHexMesh(hexMesh, hexPos){
 
 	}, {cache: edgeVertCache});
 
-	console.log("unsewn")
-	hexMesh.foreachDart(d=> {
-		console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi2:${hexMesh.phi2[d]}, \tphi_1:${hexMesh.phi_1[d]},\tphi3:${hexMesh.phi3[d]}, \tw:${hexMesh.cell(volume, d)}`)
-	});
-	// const debugArray = [];
-	// hexMesh.foreachDart(d => {
-	// 	debugArray[hexMesh.cell(volume, d)] ??= []
-	// 	debugArray[hexMesh.cell(volume, d)].push(d)
-	// });
-
-	// console.log(debugArray)
-
 	const path2323 = [2, 3, 2, 3];
 	const path2321 = [2, 3, 2, 1];
 	// // const path_12_1 = [-1, 2, -1];
@@ -466,21 +443,10 @@ function subdivideHexMesh(hexMesh, hexPos){
 		let d0 = fd;
 		let d1 = hexMesh.phi(path2323, fd);
 		let d;
-		console.log(`is boundary: ${d0}, ${hexMesh.isBoundary(d0)}`)
-		console.log(`is boundary: ${d1}, ${hexMesh.isBoundary(d1)}`)
+
 		if(!hexMesh.isBoundary(d0)) {
 			d = d0;
-			// console.log("d0", d0, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
 
-			// console.log(d, hexMesh.isBoundary(d))
 			do {
 				hexMesh.sewPhi2(hexMesh.phi(path21, d), hexMesh.phi(path_12_1, d));
 				d = hexMesh.phi(path2321, d);
@@ -488,17 +454,7 @@ function subdivideHexMesh(hexMesh, hexPos){
 		}
 		if(!hexMesh.isBoundary(d1)) {
 			d = d1;
-			// console.log("d1", d1)
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
-			// d = hexMesh.phi(path2321, d);
-			// console.log("d", d, hexMesh.isBoundary(d))
 
-			// console.log(d, hexMesh.isBoundary(d))
 			do {
 				hexMesh.sewPhi2(hexMesh.phi(path21, d), hexMesh.phi(path_12_1, d));
 				d = hexMesh.phi(path2321, d);
@@ -515,11 +471,6 @@ function subdivideHexMesh(hexMesh, hexPos){
 	const path_12 = [-1, 2];
 	const path_1232_12 = [-1, 2, 3, 2, -1, 2];
 	hexMesh.foreach(volume, wd => {
-		console.log(wd)
-		// console.log(hexMesh.phi(path12_1, wd))
-		// hexMesh.foreachDartOf(vertex, hexMesh.phi(path12_1, wd), d => {
-		// 	console.log(d)	
-		// })
 		let wd0 = wd;
 		let wd1 = hexMesh.phi(path23, wd0);
 		let wd2 = hexMesh.phi(path23, wd1);
@@ -529,18 +480,18 @@ function subdivideHexMesh(hexMesh, hexPos){
 		let wd6 = hexMesh.phi(path23, wd5);
 		let wd7 = hexMesh.phi(path23, wd6);
 
-		const wds = [wd0, wd1, wd2, wd3, wd4, wd5, wd6, wd7]
-		const wids = [hexMesh.cell(volume, hexMesh.phi(path12, wd0)), hexMesh.newCell(volume), hexMesh.newCell(volume),
-			hexMesh.newCell(volume), hexMesh.newCell(volume), hexMesh.newCell(volume), 
-			hexMesh.newCell(volume), hexMesh.newCell(volume)]
+		// const wds = [wd0, wd1, wd2, wd3, wd4, wd5, wd6, wd7]
+		// const wids = [hexMesh.cell(volume, hexMesh.phi(path12, wd0)), hexMesh.newCell(volume), hexMesh.newCell(volume),
+		// 	hexMesh.newCell(volume), hexMesh.newCell(volume), hexMesh.newCell(volume), 
+		// 	hexMesh.newCell(volume), hexMesh.newCell(volume)]
 		
-		for(let i = 0; i < 8; ++i) {
-			hexMesh.foreachDartOf(volume, wds[i], d => {
-				hexMesh.setEmbedding(volume, d, wids[i])
-			})
-		}
+		// for(let i = 0; i < 8; ++i) {
+		// 	hexMesh.foreachDartOf(volume, wds[i], d => {
+		// 		hexMesh.setEmbedding(volume, d, wids[i])
+		// 	})
+		// }
 
-		let vid0 = hexMesh.newCell(vertex); 
+		const vid0 = hexMesh.newCell(vertex); 
 		hexMesh.foreachDartOf(vertex, wd, d => {
 			hexMesh.setEmbedding(vertex, d, vid0)
 			let d1 = hexMesh.phi2[d];
@@ -551,41 +502,45 @@ function subdivideHexMesh(hexMesh, hexPos){
 			hexMesh.setEmbedding(vertex, d3, hexMesh.cell(vertex, hexMesh.phi(path21, d3)))
 		});
 
-		// hexMesh.foreachDartOf(vertex, wd, d => {
-		// 	let d1 = hexMesh.phi2[d];
-		// 	let d2 = hexMesh.phi1[d];
-		// 	let d3 = hexMesh.phi_1[d1]
-		// 	console.log(hexMesh.cell(vertex, d), hexMesh.cell(vertex, d1), hexMesh.cell(vertex, d2), hexMesh.cell(vertex, d3))
-		// });
 
+		// hexWeight[vid0].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+		// hexWeight[vid1].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+		// hexWeight[vid2].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+		// hexWeight[vid3].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
+
+
+		const weights = [];
 		hexPos[vid0] = new THREE.Vector3;
-		// hexMesh.foreachIncident(vertex, volume, wd, vd => {
-		// 	hexPos[vid0].add(hexPos[hexMesh.cell(vertex, vd)])
-		// 	console.log(vid0, hexMesh.cell(volume, vd), hexMesh.cell(vertex, vd))
-		// })
 		hexMesh.foreachAdjacent(edge, vertex, wd, vd => {
-						hexPos[vid0].add(hexPos[hexMesh.cell(vertex, vd)])
-			console.log(vid0, hexMesh.cell(volume, vd), hexMesh.cell(vertex, vd))
+			const vid = hexMesh.cell(vertex, vd);
+			hexPos[vid0].add(hexPos[vid]);
+
+			hexWeight[vid].forEach(b => { weights[b.b] = (weights[b.b] ?? 0) + b.w })
 		})
 
 		hexPos[vid0].multiplyScalar(1 / 6);
+		hexBind[vid0] = hexPos[vid0].clone()
+
+		const weight = [];
+		weights.forEach((w, b) => {
+			w /= 6;
+			weight.push({b, w});
+		})
+		hexWeight[vid0] = weight
+
 	}, {cache: volumeVertCache})
 
-
-
-	console.log("embedded")
-	hexMesh.foreachDart(d=> {
-		console.log(`d:${d}, \tphi1:${hexMesh.phi1[d]}, \tphi2:${hexMesh.phi2[d]}, \tphi_1:${hexMesh.phi_1[d]},\tphi3:${hexMesh.phi3[d]}, \tv:${hexMesh.cell(vertex, d)}, \tw:${hexMesh.cell(volume, d)}`)
-	});
+	// console.log(hexWeight)
 }
 
-subdivideHexMesh(hexMesh2, hexPos2)
+subdivideHexMesh(hexMesh, hexPos)
+subdivideHexMesh(hexMesh, hexPos)
 
-const hexRenderer2 = new RendererDarts(hexMesh2);
-hexRenderer2.volumes.create({color: 0x7777BB}).rescale(0.9);
-hexRenderer2.volumes.addTo(scene)
-hexRenderer2.vertices.create();
-hexRenderer2.vertices.addTo(scene)
+// const hexRenderer2 = new RendererDarts(hexMesh2);
+// hexRenderer2.volumes.create({color: 0x7777BB}).rescale(0.9);
+// hexRenderer2.volumes.addTo(scene)
+// hexRenderer2.vertices.create();
+// hexRenderer2.vertices.addTo(scene)
 
 
 const hexRenderer = new Renderer(hexMesh);
@@ -593,8 +548,8 @@ const hexRenderer = new Renderer(hexMesh);
 // hexRenderer.vertices.addTo(scene)
 // hexRenderer.edges.create();
 // hexRenderer.edges.addTo(scene)
-// hexRenderer.volumes.create({color: 0x7777BB}).rescale(0.9);
-// hexRenderer.volumes.addTo(scene)
+hexRenderer.volumes.create({color: 0x7777BB}).rescale(0.9);
+hexRenderer.volumes.addTo(scene)
 
 
 
@@ -637,21 +592,21 @@ function update (t)
 	skinRenderer.vertices.update();
 	skinRenderer.edges.update();
 
-	// hexMesh.foreach(hexMesh.vertex, vd => {
-	// 	const vid = hexMesh.cell(hexMesh.vertex, vd);
+	hexMesh.foreach(hexMesh.vertex, vd => {
+		const vid = hexMesh.cell(hexMesh.vertex, vd);
 
-	// 	const dqBlend = new DualQuaternion(new THREE.Quaternion(0,0,0,0), new THREE.Quaternion(0,0,0,0));
-	// 	for(let w = 0; w < hexWeight[vid].length; ++w) {
-	// 		let b = hexWeight[vid][w];
-	// 		let off = skeleton.getOffset(b.b);
-	// 		dqBlend.addScaledDualQuaternion(off, b.w);
-	// 	}
-	// 	dqBlend.normalize();
-	// 	const pdq = DualQuaternion.setFromTranslation(hexBind[vid]);
-	// 	pdq.multiplyDualQuaternions(dqBlend, pdq)
+		const dqBlend = new DualQuaternion(new THREE.Quaternion(0,0,0,0), new THREE.Quaternion(0,0,0,0));
+		for(let w = 0; w < hexWeight[vid].length; ++w) {
+			let b = hexWeight[vid][w];
+			let off = skeleton.getOffset(b.b);
+			dqBlend.addScaledDualQuaternion(off, b.w);
+		}
+		dqBlend.normalize();
+		const pdq = DualQuaternion.setFromTranslation(hexBind[vid]);
+		pdq.multiplyDualQuaternions(dqBlend, pdq)
 		
-	// 	hexPos[vid].copy(pdq.transform(new THREE.Vector3))
-	// });
+		hexPos[vid].copy(pdq.transform(new THREE.Vector3))
+	});
 
 	// hexRenderer.vertices.update()
 	// hexRenderer.edges.update()
