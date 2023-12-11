@@ -544,12 +544,12 @@ subdivideHexMesh(hexMesh, hexPos)
 
 
 const hexRenderer = new Renderer(hexMesh);
-// hexRenderer.vertices.create();
-// hexRenderer.vertices.addTo(scene)
-// hexRenderer.edges.create();
-// hexRenderer.edges.addTo(scene)
-hexRenderer.volumes.create({color: 0x7777BB}).rescale(0.9);
-hexRenderer.volumes.addTo(scene)
+hexRenderer.vertices.create({size: 0.00125});
+hexRenderer.vertices.addTo(scene)
+hexRenderer.edges.create({size: 0.125});
+hexRenderer.edges.addTo(scene)
+// hexRenderer.volumes.create({color: 0x7777BB}).rescale(0.9);
+// hexRenderer.volumes.addTo(scene)
 
 
 
@@ -608,8 +608,8 @@ function update (t)
 		hexPos[vid].copy(pdq.transform(new THREE.Vector3))
 	});
 
-	// hexRenderer.vertices.update()
-	// hexRenderer.edges.update()
+	hexRenderer.vertices.update()
+	hexRenderer.edges.update()
 	// hexRenderer.volumes.update()
 	// hexRenderer.volumes.rescale(0.9)
 }
@@ -621,7 +621,7 @@ function render()
 
 // let prevT = 0;
 function mainloop(t)
-{
+{ 
     update(t);
     render();
 	requestAnimationFrame(mainloop);
